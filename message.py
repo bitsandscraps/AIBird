@@ -8,7 +8,6 @@ Example:
     screenshot = recv_screenshot(screenshot_raw, width, height)
 """
 import struct
-import numpy as np
 
 # Message IDs
 MID_CONFIGURE = 1
@@ -32,20 +31,57 @@ MID_RESTART_LEVEL = 52
 # Length of response messages
 LEN_CONFIGURE = 3       # Round Info = 1, Time Limit = 1, Available Levels = 1
 LEN_SCREENSHOT = 4 + 4          # Width = 4, Height = 4
+LEN_PIXEL = 3                   # RGB
 LEN_GET_STATE = 1
 LEN_GET_SCORE = 21 * 4          # Score for each Level = 4, 21 Levels
 LEN_GET_CURRENT_LEVEL = 1       # Current Level = 1
 LEN_ETC = 1                     # OK/ERR
 
-# Response of a current state request message
-STATE_UNKNOWN = 0
-STATE_MAIN_MENU = 1
-STATE_EPISODE_MENU = 2
-STATE_LEVEL_SELECTION = 3
-STATE_LOADING = 4
-STATE_PLAYING = 5
-STATE_WON = 6
-STATE_LOST = 7
+
+
+class GameState:
+    """ Data structure representing the game state.
+
+    Args
+        state -- an integer value between 0 and 7
+    """
+    # Response of a current state request message
+    STATE_UNKNOWN = 0
+    STATE_MAIN_MENU = 1
+    STATE_EPISODE_MENU = 2
+    STATE_LEVEL_SELECTION = 3
+    STATE_LOADING = 4
+    STATE_PLAYING = 5
+    STATE_WON = 6
+    STATE_LOST = 7
+
+    STATE_STR = {
+        STATE_UNKNOWN: 'unknown',
+        STATE_MAIN_MENU: 'main menu',
+        STATE_EPISODE_MENU: 'episode menu',
+        STATE_LEVEL_SELECTION: 'level selection',
+        STATE_LOADING: 'loading',
+        STATE_PLAYING: 'playing',
+        STATE_WON: 'won',
+        STATE_LOST: 'lost'
+    }
+
+    def __init__(self, state):
+        if state < self.STATE_UNKNOWN or state > self.STATE_LOST:
+            raise ValueError('No state corresponding to {}'.format(state))
+        self.state = state
+
+    def __str__(self):
+        return self.STATE_STR[self.state]
+
+    def isover(self):
+        """ Return true if the level is over. Return false otherwise. """
+        return self.state == self.STATE_WON or self.state == self.STATE_LOST
+
+    def won(self):
+        """ Return true if won. Return false otherwise. """
+        return self.state == self.STATE_WON
+
 
 def configure(team_id):
     """Formulate a configure message"""
@@ -53,7 +89,7 @@ def configure(team_id):
 
 def recv_configure(result):
     """Parse the response of a configure message"""
-    round_info, time_limit, available_levels = struct.unpack('!bbb', result)
+    round_info, _, available_levels = struct.unpack('!bbb', result)
     if round_info == 0:
         raise ValueError('Configuration Failed')
     return available_levels
@@ -68,34 +104,32 @@ def recv_screenshot_size(result):
     Arguments
     result -- received data
 
-    returns the tuple (image data size in bytes, width, height)
+    returns the tuple (number of pixels, width, height)
     """
     width, height = struct.unpack('!ii', result)
-    return width * height * 3, width, height        # with * height RGB tuples
+    return width * height, width, height        # with * height RGB tuples
 
-def recv_screenshot(result, width, height):
+def recv_pixel(result):
     """Parse the stream into an image
 
     Arguments
-    result -- received data
-    width -- width of the image
-    height -- height of the image
+    result -- received data(r, g, b tuple in network order)
 
-    returns a numpy array of (height, width, 3)
+    returns a (r, g, b) tuple
     """
-    screenshot = []
-    for red, green, blue in struct.iter_unpack('!bbb', result):
-        screenshot.append([red, green, blue])
-    np_screenshot = np.ndarray(screenshot, dtype=np.uint8)
-    return np_screenshot.resize((height, width, 3))
+    red, green, blue = struct.unpack('!bbb', result)
+    return red, green, blue
 
 def get_state():
     """Formulate a message requesting the current state"""
     return struct.pack('!b', MID_GET_STATE)
 
 def recv_state(result):
-    """Parse the response of a state request message"""
-    return struct.unpack('!b', result)
+    """Parse the response of a state request message
+
+    Return a GameState object corresponding to the current state.
+    """
+    return GameState(struct.unpack('!b', result)[0])
 
 def get_best_score():
     """Formulate a message requesting the best score"""
@@ -111,8 +145,8 @@ def recv_score(result):
     Returns a list of length 21, where i-th element is the i-th level score.
     """
     score_list = []
-    for score in struct.iter_unpack('!b', result):
-        score_list.append(score)
+    for score in struct.iter_unpack('!i', result):
+        score_list.append(score[0])
     return score_list
 
 def get_current_level():
@@ -124,9 +158,9 @@ def recv_current_level(result):
 
     Returns an integer representing the current level.
     """
-    level = struct.unpack('!b', result)
+    level = struct.unpack('!b', result)[0]
     if level < 0 or level > 21:
-        raise ValueError('Received current level = ' + level)
+        raise ValueError('Received current level = {}'.format(level))
     return level
 
 def cart_shoot(fx, fy, dx, dy, t1, t2, mode='safe'):
@@ -140,10 +174,10 @@ def cart_shoot(fx, fy, dx, dy, t1, t2, mode='safe'):
     elif mode == 'fast':
         mid = MID_CART_SHOOT_FAST
     else:
-        raise ValueError('cart_shoot mode = ' + mode)
+        raise ValueError('cart_shoot mode = {}'.format(mode))
     return struct.pack('!biiiiii', mid, fx, fy, dx, dy, t1, t2)
 
-def polar_shoot(fx, fy, theta, r, t1, t2, mode='safe'):
+def polar_shoot(fx, fy, r, theta, t1, t2, mode='safe'):
     """Formulate a polar shoot request message.
 
     Keyword Arg
@@ -154,7 +188,7 @@ def polar_shoot(fx, fy, theta, r, t1, t2, mode='safe'):
     elif mode == 'fast':
         mid = MID_POLAR_SHOOT_FAST
     else:
-        raise ValueError('polar_shoot mode = ' + mode)
+        raise ValueError('polar_shoot mode = {}'.format(mode))
     return struct.pack('!biiiiii', mid, fx, fy, theta, r, t1, t2)
 
 def zoom_out():
@@ -189,11 +223,10 @@ def recv_result(result):
 
     Return True when succeeded, False otherwise
     """
-    res = struct.unpack('!b', result)
+    res = struct.unpack('!b', result)[0]
     if res == 1:
         return True
     elif res == 0:
         return False
     else:
-        raise ValueError('recv_result received: ' + res)
-
+        raise ValueError('recv_result received: {}'.format(res[0]))

@@ -1,8 +1,32 @@
 """AIBird Client module"""
 import socket
+import numpy as np
 import message
 
-TIMEOUT = 5         # Timeout value for the socket
+TIMEOUT = 30         # Timeout value for the socket
+FOCUS = [
+    (194, 326),     # Level 1
+    (208, 312),     # Level 2
+    (170, 336),     # Level 3
+    (194, 330),     # Level 4
+    (188, 335),     # Level 5
+    (184, 333),     # Level 6
+    (171, 335),     # Level 7
+    (184, 333),     # Level 8
+    (174, 319),     # Level 9
+    (175, 324),     # Level 10
+    (172, 333),     # Level 11
+    (164, 338),     # Level 12
+    (165, 336),     # Level 13
+    (171, 290),     # Level 14
+    (154, 338),     # Level 15
+    (156, 320),     # Level 16
+    (175, 333),     # Level 17
+    (171, 330),     # Level 18
+    (162, 337),     # Level 19
+    (177, 328),     # Level 20
+    (177, 303)      # Level 21
+]
 
 class AIBirdClient:
     """Handles communication with the AIBird Server
@@ -25,6 +49,7 @@ class AIBirdClient:
         self.port = port
         self.team_id = team_id
         self.socket = None
+        self.level = None
 
     def connect(self):
         """Connect to AIBird server."""
@@ -40,24 +65,41 @@ class AIBirdClient:
 
         Return a numpy array containing the screenshot"""
         self.socket.sendall(message.get_screenshot())
-        size = message.recv_screenshot_size(
-                self.socket.recv(message.LEN_SCREENSHOT))
-        return message.recv_screenshot(self.socket.recv(size))
+        size, width, height = message.recv_screenshot_size(
+            self.socket.recv(message.LEN_SCREENSHOT))
+        img_data = []
+        for _ in range(size):
+            pixel = self.socket.recv(message.LEN_PIXEL)
+            img_data.append(message.recv_pixel(pixel))
+        img = np.asarray(img_data, dtype=np.uint8)
+        img.resize(height, width, 3)
+        return img
 
-    def my_score(self):
-        """Get my score
+    def state(self):
+        """Get current state
 
-        Return a list of lenth 21 where each slot indicates a best score of
-        the corresponding level.
+        Return a GameState object.
+        """
+        self.socket.sendall(message.get_state())
+        return message.recv_state(self.socket.recv(message.LEN_GET_STATE))
+
+    def my_score(self, level=None):
+        """Get my score for level `level`
+
+        If level is not specified, returns the list of length 21, containing the scores
+        for each level.
         """
         self.socket.sendall(message.get_my_score())
-        return message.recv_score(self.socket.recv(message.LEN_GET_SCORE))
+        score_list = message.recv_score(self.socket.recv(message.LEN_GET_SCORE))
+        if level is not None:
+            return score_list[level - 1]
+        return score_list
 
     def current_level(self):
         """Get current level"""
         self.socket.sendall(message.get_current_level())
         return message.recv_current_level(
-                self.socket.recv(message.LEN_GET_CURRENT_LEVEL))
+            self.socket.recv(message.LEN_GET_CURRENT_LEVEL))
 
     def send_and_recv_result(self, msg):
         """Send msg and parse its result.
@@ -67,33 +109,41 @@ class AIBirdClient:
         self.socket.sendall(msg)
         return message.recv_result(self.socket.recv(message.LEN_ETC))
 
-    def cart_shoot(self, fx, fy, dx, dy, t1, t2, mode='safe'):
+    def cart_shoot(self, dx, dy, t1, t2, mode='safe'):
         """Send cart_shoot request.
 
+        It assumes that the screen is fully zoomed out.
+
         Args
-            fx, fy -- x, y coordinate of slingshot
-            dx, dy -- relative x, y coordinate of release point w.r.t (fx,fy)
+            dx, dy -- relative x, y coordinate of release point
             t1 -- release time
             t2 -- gap between release time and tap time
 
         Return True if accepted, False if rejected.
         """
+        level = self.current_level()
+        fx, fy = FOCUS[level - 1]
         return self.send_and_recv_result(
-                message.cart_shoot(fx, fy, dx, dy, t1, t2, mode))
+            message.cart_shoot(fx, fy, dx, dy, t1, t2, mode))
 
-    def polar_shoot(self, fx, fy, theta, r, t1, t2, mode='safe'):
+    def polar_shoot(self, r, theta, t1, t2, mode='safe'):
         """Send cart_shoot request.
 
+        It assumes that the screen is fully zoomed out.
+
         Args
-            fx, fy -- x, y coordinate of slingshot
-            theta, r -- relative polar coordinates of release point w.r.t (fx,fy)
+            r -- the radial coordinate
+            theta -- the angular coordinate by degree from -90.00 to 90.00.
+                     The theta value is represented by an integer. e.g.) 8025 means 80.25
             t1 -- release time
             t2 -- gap between release time and tap time
 
         Return True if accepted, False if rejected.
         """
+        level = self.current_level()
+        fx, fy = FOCUS[level - 1]
         return self.send_and_recv_result(
-                message.polar_shoot(fx, fy, theta, r, t1, t2, mode))
+            message.polar_shoot(fx, fy, theta, r, t1, t2, mode))
 
     def zoom_in(self):
         """Send zoom in request.
@@ -124,4 +174,3 @@ class AIBirdClient:
         Return True if succeeded, False otherwise.
         """
         return self.send_and_recv_result(message.restart_level())
-
