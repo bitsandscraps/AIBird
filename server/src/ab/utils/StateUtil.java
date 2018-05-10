@@ -83,7 +83,8 @@ public class StateUtil {
 			
 				e.printStackTrace();
 			}
-		   if(getGameState(proxy) == GameState.WON)
+                  GameState curr = getGameState(proxy);
+		   if(curr == GameState.WON || curr == GameState.PLAYING)
 		   {	
 			   current_score = _getScore(proxy);
 		   }

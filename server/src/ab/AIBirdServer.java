@@ -17,7 +17,7 @@ public class AIBirdServer {
                         portNumber = Integer.parseInt(args[0]);
                 }
                 
-                System.err.println("Server will be opened on port " + portNumber);
+                System.err.println("Client server will be opened on port " + portNumber);
 
                 try (
                         ServerSocket serverSocket = new ServerSocket(portNumber);
@@ -27,7 +27,9 @@ public class AIBirdServer {
                 ) {
                         AIBirdProtocol abp = new AIBirdProtocol();
                         while (true) {
+                                System.out.println("In server loop.");
                                 byte mid = in.readByte();
+                                System.out.println("MID = " + mid);
                                 int length = abp.numberOfIntsToReadMore(mid);
                                 for (int i = 0; i < length; i++) {
                                         buffer[i] = in.readInt();

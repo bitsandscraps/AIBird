@@ -14,7 +14,6 @@ MID_SCREENSHOT = 11
 MID_GET_STATE = 12
 MID_GET_BEST_SCORE = 13
 MID_GET_MY_SCORE = 23
-MID_GET_CURRENT_LEVEL = 14
 MID_CART_SHOOT_SAFE = 31
 MID_CART_SHOOT_FAST = 41
 MID_POLAR_SHOOT_SAFE = 32
@@ -123,25 +122,22 @@ def get_my_score():
     return struct.pack('!b', MID_GET_MY_SCORE)
 
 def recv_score(result):
-    """Parse a response of a score request message.
+    """Parse a response of a score request message."""
+    return struct.unpack('!i', result)
 
-    Returns a list of length 21, where i-th element is the i-th level score.
-    """
-    return struct.iter_unpack('!i', result)
-
-def get_current_level():
-    """Formulate a message requesting the current level information"""
-    return struct.pack('!b', MID_GET_CURRENT_LEVEL)
-
-def recv_current_level(result):
-    """Parse a response of a current level request message
-
-    Returns an integer representing the current level.
-    """
-    level = struct.unpack('!i', result)[0]
-    if level < 0 or level > 21:
-        raise ValueError('Received current level = {}'.format(level))
-    return level
+# def get_current_level():
+#     """Formulate a message requesting the current level information"""
+#     return struct.pack('!b', MID_GET_CURRENT_LEVEL)
+# 
+# def recv_current_level(result):
+#     """Parse a response of a current level request message
+# 
+#     Returns an integer representing the current level.
+#     """
+#     level = struct.unpack('!i', result)[0]
+#     if level < 0 or level > 21:
+#         raise ValueError('Received current level = {}'.format(level))
+#     return level
 
 def cart_shoot(fx, fy, dx, dy, t1, t2, mode='safe'):
     """Formulate a Cartesian shoot request message.
@@ -169,7 +165,8 @@ def polar_shoot(fx, fy, r, theta, t1, t2, mode='safe'):
         mid = MID_POLAR_SHOOT_FAST
     else:
         raise ValueError('polar_shoot mode = {}'.format(mode))
-    return struct.pack('!biiiiii', mid, fx, fy, theta, r, t1, t2)
+    theta = int(round(theta * 100))
+    return struct.pack('!biiiiii', mid, fx, fy, r, theta, t1, t2)
 
 def zoom_out():
     """Formulate a zoom out request message"""
@@ -188,7 +185,7 @@ def load_level(level):
 
     level -- integer representing the level to load
     """
-    return struct.pack('!bb', MID_LOAD_LEVEL, level)
+    return struct.pack('!bi', MID_LOAD_LEVEL, level)
 
 def restart_level():
     """Formulate a restart level request message"""

@@ -4,6 +4,8 @@ import numpy as np
 import message
 
 TIMEOUT = 30         # Timeout value for the socket
+MAXTRIALS = 5       # Max number of zoom tries
+
 FOCUS = [
     (194, 326),     # Level 1
     (208, 312),     # Level 2
@@ -50,12 +52,14 @@ class AIBirdClient:
         self.team_id = team_id
         self.socket = None
         self.level = None
+        self.current_level = 1
 
     def connect(self):
         """Connect to AIBird server."""
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.settimeout(TIMEOUT)
         self.socket.connect((self.host, self.port))
+        self.load_level(self.current_level)
 
     def screenshot(self):
         """Get screenshot
@@ -89,12 +93,6 @@ class AIBirdClient:
         self.socket.sendall(message.get_my_score())
         return message.recv_score(self.socket.recv(message.LEN_GET_SCORE))
 
-    def current_level(self):
-        """Get current level"""
-        self.socket.sendall(message.get_current_level())
-        return message.recv_current_level(
-            self.socket.recv(message.LEN_GET_CURRENT_LEVEL))
-
     def send_and_recv_result(self, msg):
         """Send msg and parse its result.
 
@@ -115,8 +113,14 @@ class AIBirdClient:
 
         Return True if accepted, False if rejected.
         """
-        level = self.current_level()
+        level = self.current_level
         fx, fy = FOCUS[level - 1]
+        for _ in range(MAXTRIALS):
+            if self.zoom_out():
+                break
+        else:
+            raise Exception('cart_shoot: reached MAXTRIALS')
+
         return self.send_and_recv_result(
             message.cart_shoot(fx, fy, dx, dy, t1, t2, mode))
 
@@ -128,16 +132,20 @@ class AIBirdClient:
         Args
             r -- the radial coordinate
             theta -- the angular coordinate by degree from -90.00 to 90.00.
-                     The theta value is represented by an integer. e.g.) 8025 means 80.25
             t1 -- release time
             t2 -- gap between release time and tap time
 
         Return True if accepted, False if rejected.
         """
-        level = self.current_level()
+        level = self.current_level
         fx, fy = FOCUS[level - 1]
+        for _ in range(MAXTRIALS):
+            if self.zoom_out():
+                break
+        else:
+            raise Exception('cart_shoot: reached MAXTRIALS')
         return self.send_and_recv_result(
-            message.polar_shoot(fx, fy, theta, r, t1, t2, mode))
+            message.polar_shoot(fx, fy, r, theta, t1, t2, mode))
 
     def zoom_in(self):
         """Send zoom in request.
@@ -161,7 +169,10 @@ class AIBirdClient:
         """Send load level `level` request.
         Return True if succeeded, False otherwise.
         """
-        return self.send_and_recv_result(message.load_level(level))
+        result = self.send_and_recv_result(message.load_level(level))
+        if result:
+            self.current_level = level
+        return result
 
     def restart_level(self):
         """Send restart level request.

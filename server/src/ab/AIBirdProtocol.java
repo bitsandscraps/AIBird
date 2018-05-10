@@ -133,6 +133,7 @@ public class AIBirdProtocol {
         }
 
         private byte[] loadLevel(int[] theInput) throws IOException {
+                System.out.println("loadLevel(" + theInput[0] + ")");
                 aRobot.loadLevel(theInput[0]);
                 return this.writeInt(1);
         }
@@ -161,8 +162,8 @@ public class AIBirdProtocol {
 
         private byte[] polarShootSafe(int[] shotInfo) throws IOException {
                 double r = shotInfo[2];
-                double theta = Math.toDegrees(((double) shotInfo[3]) / 100.0);
-                int dx = Math.toIntExact(Math.round(r * Math.cos(theta)));
+                double theta = Math.toRadians(((double) shotInfo[3]) / 100.0);
+                int dx = Math.toIntExact(Math.round(r * Math.cos(theta) * -1));
                 int dy = Math.toIntExact(Math.round(r * Math.sin(theta)));
                 Shot shot = new Shot(shotInfo[0], shotInfo[1], dx, dy, shotInfo[4], shotInfo[5]);
                 aRobot.cFastshoot(shot);
