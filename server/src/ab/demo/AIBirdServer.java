@@ -1,15 +1,17 @@
+package ab.demo;
+
 import java.net.*;
 import java.io.*;
+import ab.demo.AIBirdProtocol;
 
 public class AIBirdServer {
 
-        private static final int BUFFERSIZE = 100; 
-
         public static void main(String[] args) throws IOException {
                 int portNumber = 2004;
+                int[] buffer = new int[6];
 
                 if (args.length > 1) {
-                        System.err.println("Usage: java AIBirdServer [<port number>]");
+                        System.err.println("Usage: java -jar ABSoftware.jar [<port number>]");
                         System.exit(1);
                 } else if (args.length == 1) {
                         portNumber = Integer.parseInt(args[0]);
@@ -18,21 +20,18 @@ public class AIBirdServer {
                 try (
                         ServerSocket serverSocket = new ServerSocket(portNumber);
                         Socket clientSocket = serverSocket.accept();
-                        PrintWriter out =
-                                new PrintWriter(clientSocket.getOutputStream(), true);
-                        BufferedReader in = new BufferedReader(
-                                        new InputStreamReader(clientSocket.getInputStream()));
+                        OutputStream out = clientSocket.getOutputStream();
+                        DataInputStream in = new DataInputStream(clientSocket.getInputStream());
                 ) {
-                        byte[] inMessage, outMessage;
-                        int inMessageLen;
-
-                        inMessage = new byte[BUFFERSIZE];
-
-                        // Initiate conversation with client
+                        System.err.println("Server Loop.");
                         AIBirdProtocol abp = new AIBirdProtocol();
-                        while (inMessageLen = in.read(inMessage, 0, BUFFERSIZE)) {
-                                outMessage = abp.processInput(inMessage, inMessageLen);
-                                out.write(outMessage);
+                        while (true) {
+                                byte mid = in.readByte();
+                                int length = abp.numberOfIntsToReadMore(mid);
+                                for (int i = 0; i < length; i++) {
+                                        buffer[i] = in.readInt();
+                                }
+                                out.write(abp.processInput(mid, buffer));
                         }
                 } catch(IOException e){
                         System.out.println("Exception caught when trying to listen on port "

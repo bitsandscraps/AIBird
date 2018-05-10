@@ -56,9 +56,6 @@ class AIBirdClient:
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.settimeout(TIMEOUT)
         self.socket.connect((self.host, self.port))
-        self.socket.sendall(message.configure(self.team_id))
-        data = self.socket.recv(message.LEN_CONFIGURE)
-        message.recv_configure(data)
 
     def screenshot(self):
         """Get screenshot
@@ -83,17 +80,14 @@ class AIBirdClient:
         self.socket.sendall(message.get_state())
         return message.recv_state(self.socket.recv(message.LEN_GET_STATE))
 
-    def my_score(self, level=None):
+    def my_score(self):
         """Get my score for level `level`
 
         If level is not specified, returns the list of length 21, containing the scores
         for each level.
         """
         self.socket.sendall(message.get_my_score())
-        score_list = message.recv_score(self.socket.recv(message.LEN_GET_SCORE))
-        if level is not None:
-            return score_list[level - 1]
-        return score_list
+        return message.recv_score(self.socket.recv(message.LEN_GET_SCORE))
 
     def current_level(self):
         """Get current level"""

@@ -10,7 +10,6 @@ Example:
 import struct
 
 # Message IDs
-MID_CONFIGURE = 1
 MID_SCREENSHOT = 11
 MID_GET_STATE = 12
 MID_GET_BEST_SCORE = 13
@@ -29,13 +28,12 @@ MID_LOAD_LEVEL = 51
 MID_RESTART_LEVEL = 52
 
 # Length of response messages
-LEN_CONFIGURE = 3       # Round Info = 1, Time Limit = 1, Available Levels = 1
 LEN_SCREENSHOT = 4 + 4          # Width = 4, Height = 4
 LEN_PIXEL = 3                   # RGB
-LEN_GET_STATE = 1
-LEN_GET_SCORE = 21 * 4          # Score for each Level = 4, 21 Levels
-LEN_GET_CURRENT_LEVEL = 1       # Current Level = 1
-LEN_ETC = 1                     # OK/ERR
+LEN_GET_STATE = 4
+LEN_GET_SCORE = 4          # Score for each Level = 4, 21 Levels
+LEN_GET_CURRENT_LEVEL = 4       # Current Level = 1
+LEN_ETC = 4                     # OK/ERR
 
 
 
@@ -83,17 +81,6 @@ class GameState:
         return self.state == self.STATE_WON
 
 
-def configure(team_id):
-    """Formulate a configure message"""
-    return struct.pack('!bi', MID_CONFIGURE, team_id)
-
-def recv_configure(result):
-    """Parse the response of a configure message"""
-    round_info, _, available_levels = struct.unpack('!bbb', result)
-    if round_info == 0:
-        raise ValueError('Configuration Failed')
-    return available_levels
-
 def get_screenshot():
     """Formulate a screenshot request message"""
     return struct.pack('!b', MID_SCREENSHOT)
@@ -129,11 +116,7 @@ def recv_state(result):
 
     Return a GameState object corresponding to the current state.
     """
-    return GameState(struct.unpack('!b', result)[0])
-
-def get_best_score():
-    """Formulate a message requesting the best score"""
-    return struct.pack('!b', MID_GET_BEST_SCORE)
+    return GameState(struct.unpack('!i', result)[0])
 
 def get_my_score():
     """Formulate a message requesting my score"""
@@ -144,10 +127,7 @@ def recv_score(result):
 
     Returns a list of length 21, where i-th element is the i-th level score.
     """
-    score_list = []
-    for score in struct.iter_unpack('!i', result):
-        score_list.append(score[0])
-    return score_list
+    return struct.iter_unpack('!i', result)
 
 def get_current_level():
     """Formulate a message requesting the current level information"""
@@ -158,7 +138,7 @@ def recv_current_level(result):
 
     Returns an integer representing the current level.
     """
-    level = struct.unpack('!b', result)[0]
+    level = struct.unpack('!i', result)[0]
     if level < 0 or level > 21:
         raise ValueError('Received current level = {}'.format(level))
     return level
@@ -223,7 +203,7 @@ def recv_result(result):
 
     Return True when succeeded, False otherwise
     """
-    res = struct.unpack('!b', result)[0]
+    res = struct.unpack('!i', result)[0]
     if res == 1:
         return True
     elif res == 0:
