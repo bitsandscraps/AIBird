@@ -1,23 +1,37 @@
-import time
+import sys
 import client
 
 def main():
     abc = client.AIBirdClient()
     abc.connect()
-    time.sleep(3)
-    for level in range(1, 22):
-        print('------------------Level {}------------------'.format(level))
-        abc.load_level(level)
-        abc.zoom_out()
-        abc.cart_shoot(-50, 50, 0, 0)
-        print('Current score:', abc.my_score(level))
-        while True:
-            state = abc.state()
-            print(state)
-            if state.isover():
-                break
-            abc.cart_shoot(-50, 50, 0, 0)
-            print('Current score:', abc.my_score(level))
+    while True:
+        c = sys.stdin.read(1)
+        if c == 'h':
+            print('h: help, s: score, c: cshoot, p: pshoot, i: zoom in,',
+                  'o: zoom out, l: load level, r: restart level')
+        elif c == 's':
+            print(abc.my_score())
+        elif c == 'c':
+            arg = [int(x) for x in input('dx dy t1 t2').split()]
+            print(abc.cart_shoot(arg[0], arg[1], arg[2], arg[3]))
+        elif c == 'p':
+            arg = input('r theta t1 t2').split()
+            theta = float(arg[1])
+            iarg = [int(x) for x in arg]
+            print(abc.polar_shoot(iarg[0], theta, iarg[2], iarg[3]))
+        elif c == 'i':
+            print(abc.zoom_in())
+        elif c == 'o':
+            print(abc.zoom_out())
+        elif c == 'l':
+            print(abc.load_level(int(input('level?'))))
+        elif c == 'r':
+            print(abc.restart_level())
+
+
+            
+                
+
 
 if __name__ == "__main__":
     main()
