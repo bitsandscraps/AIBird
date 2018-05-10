@@ -1,8 +1,8 @@
-package ab.demo;
+package ab;
 
 import java.net.*;
 import java.io.*;
-import ab.demo.AIBirdProtocol;
+import ab.AIBirdProtocol;
 
 public class AIBirdServer {
 
@@ -11,11 +11,13 @@ public class AIBirdServer {
                 int[] buffer = new int[6];
 
                 if (args.length > 1) {
-                        System.err.println("Usage: java -jar ABSoftware.jar [<port number>]");
+                        System.err.println("Usage: java -jar AIBirdServer.jar [<port number>]");
                         System.exit(1);
                 } else if (args.length == 1) {
                         portNumber = Integer.parseInt(args[0]);
                 }
+                
+                System.err.println("Server will be opened on port " + portNumber);
 
                 try (
                         ServerSocket serverSocket = new ServerSocket(portNumber);
@@ -23,7 +25,6 @@ public class AIBirdServer {
                         OutputStream out = clientSocket.getOutputStream();
                         DataInputStream in = new DataInputStream(clientSocket.getInputStream());
                 ) {
-                        System.err.println("Server Loop.");
                         AIBirdProtocol abp = new AIBirdProtocol();
                         while (true) {
                                 byte mid = in.readByte();

@@ -24,7 +24,7 @@ import java.util.List;
 import javax.imageio.ImageIO;
 
 import Jama.Matrix;
-import ab.demo.other.ActionRobot;
+import ab.other.ActionRobot;
 import ab.server.Proxy;
 import ab.server.proxy.message.ProxyScreenshotMessage;
 import ab.utils.ImageSegFrame;

@@ -1,9 +1,9 @@
-package ab.demo;
+package ab;
 import java.io.*;
 import java.awt.image.BufferedImage;
 import javax.imageio.ImageIO;
-import ab.demo.other.ActionRobot;
-import ab.demo.other.Shot;
+import ab.other.ActionRobot;
+import ab.other.Shot;
 import ab.utils.StateUtil;
 import ab.vision.GameStateExtractor.GameState;
 
