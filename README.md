@@ -9,14 +9,16 @@ A Python interface to control the [AIBird software](https://aibirds.org)
 * jdk
 * ant
 * python
+* [AIBird Chrome Plugin](https://aibirds.org/basic-game-playing-software/getting-started.html)
 
 ### Running
-The server side
+1. Start chrome
+2. The server side
 ```bash
 $ cd server
 $ ant
 ```
-The client side
+3. The client side
 ```python
 import aibird_client
 abc = aibird_client.AIBirdClient()
