@@ -5,7 +5,7 @@ def main():
     abc = aibird_client.AIBirdClient()
     abc.connect()
     while True:
-        c = sys.stdin.read(1)
+        c = input('>')[0]
         if c == 'h':
             print('h: help, s: score, c: cshoot, p: pshoot, i: zoom in,',
                   'o: zoom out, l: load level, r: restart level'

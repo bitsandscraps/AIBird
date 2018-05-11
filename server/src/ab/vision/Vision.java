@@ -89,7 +89,15 @@ public class Vision {
 		return visionRealShape.findHills();
 	} 
 	
-	
+	public Rectangle findSling()
+	{
+		if (visionRealShape == null)
+		{
+			visionRealShape = new VisionRealShape(image);
+		}
+		return visionRealShape.findSling();
+	}
+
 	public Rectangle findSlingshotMBR()
 	{
 		if (visionMBR == null)

@@ -167,6 +167,7 @@ def polar_shoot(fx, fy, r, theta, t1, t2, mode='safe'):
     else:
         raise ValueError('polar_shoot mode = {}'.format(mode))
     theta = int(round(theta * 100))
+    print(fx, fy, r, theta, t1, t2)
     return struct.pack('!biiiiii', mid, fx, fy, r, theta, t1, t2)
 
 def zoom_out():

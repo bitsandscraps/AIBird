@@ -1,6 +1,8 @@
 package ab;
 import java.io.*;
 import java.awt.image.BufferedImage;
+import java.awt.Point;
+import java.awt.Rectangle;
 import java.util.concurrent.TimeUnit;
 import java.util.List;
 import javax.imageio.ImageIO;
@@ -24,6 +26,8 @@ public class AIBirdProtocol {
         private final byte LOADLEVEL = 51;
         private final byte RESTARTLEVEL = 52;
         private final byte ISLEVELOVER = 60;
+        private final double X_OFFSET = 0.5;
+        private final double Y_OFFSET = 0.65;
 
         private ActionRobot aRobot;
         private int curLevel = 1;
@@ -146,8 +150,14 @@ public class AIBirdProtocol {
                 return this.writeInt(1);
         }
 
+        private Point findSling() {
+                Vision vision = getVision();
+                return getReferencePoint(vision.findSling());
+        }
+
         private byte[] cartShootSafe(int[] shotInfo) throws IOException {
-                Shot shot = new Shot(shotInfo[0], shotInfo[1], shotInfo[2], shotInfo[3], shotInfo[4], shotInfo[5]);
+                Point sling = findSling();
+                Shot shot = new Shot(sling.x, sling.y, shotInfo[2], shotInfo[3], shotInfo[4], shotInfo[5]);
                 aRobot.cshoot(shot);
                 try {
                         TimeUnit.SECONDS.sleep(15);
@@ -157,27 +167,31 @@ public class AIBirdProtocol {
         }
 
         private byte[] cartShootFast(int[] shotInfo) throws IOException {
-                Shot shot = new Shot(shotInfo[0], shotInfo[1], shotInfo[2], shotInfo[3], shotInfo[4], shotInfo[5]);
+                Point sling = findSling();
+                Shot shot = new Shot(sling.x, sling.y, shotInfo[2], shotInfo[3], shotInfo[4], shotInfo[5]);
                 aRobot.cFastshoot(shot);
                 return this.writeInt(1);
         }
         
-        private byte[] polarShootFast(int[] shotInfo) throws IOException {
-                double r = shotInfo[2];
-                double theta = Math.toDegrees(((double) shotInfo[3]) / 100.0);
-                int dx = Math.toIntExact(Math.round(r * Math.cos(theta)));
-                int dy = Math.toIntExact(Math.round(r * Math.sin(theta)));
-                Shot shot = new Shot(shotInfo[0], shotInfo[1], dx, dy, shotInfo[4], shotInfo[5]);
-                aRobot.cshoot(shot);
-                return this.writeInt(1);
-        }
-
         private byte[] polarShootSafe(int[] shotInfo) throws IOException {
                 double r = shotInfo[2];
                 double theta = Math.toRadians(((double) shotInfo[3]) / 100.0);
                 int dx = Math.toIntExact(Math.round(r * Math.cos(theta) * -1));
                 int dy = Math.toIntExact(Math.round(r * Math.sin(theta)));
-                Shot shot = new Shot(shotInfo[0], shotInfo[1], dx, dy, shotInfo[4], shotInfo[5]);
+                Point sling = findSling();
+                Shot shot = new Shot(sling.x, sling.y, dx, dy, shotInfo[4], shotInfo[5]);
+                System.out.printf("%d %d %d %d %d %d\n", shotInfo[0], shotInfo[1], dx, dy, shotInfo[4], shotInfo[5]);
+                aRobot.cshoot(shot);
+                return this.writeInt(1);
+        }
+
+        private byte[] polarShootFast(int[] shotInfo) throws IOException {
+                double r = shotInfo[2];
+                double theta = Math.toRadians(((double) shotInfo[3]) / 100.0);
+                int dx = Math.toIntExact(Math.round(r * Math.cos(theta) * -1));
+                int dy = Math.toIntExact(Math.round(r * Math.sin(theta)));
+                Point sling = findSling();
+                Shot shot = new Shot(sling.x, sling.y, dx, dy, shotInfo[4], shotInfo[5]);
                 aRobot.cFastshoot(shot);
                 try {
                         TimeUnit.SECONDS.sleep(15);
@@ -209,6 +223,12 @@ public class AIBirdProtocol {
                 BufferedImage screenshot = ActionRobot.doScreenShot();
                 // process image
                 return new Vision(screenshot);
+        }
+
+        // find the reference point given the sling
+        public Point getReferencePoint(Rectangle sling) {
+                Point p = new Point((int)(sling.x + X_OFFSET * sling.width), (int)(sling.y + Y_OFFSET * sling.width));
+                return p;
         }
 }
 

@@ -138,8 +138,8 @@ class AIBirdClient:
 
         Args
             dx, dy -- relative x, y coordinate of release point
-            t1 -- release time
-            t2 -- gap between release time and tap time
+            t1 -- release time (in millisecons)
+            t2 -- gap between release time and tap time (in milliseconds)
 
         Return True if accepted, False if rejected.
         """
@@ -166,8 +166,8 @@ class AIBirdClient:
         Args
             r -- the radial coordinate
             theta -- the angular coordinate by degree from -90.00 to 90.00.
-            t1 -- release time
-            t2 -- gap between release time and tap time
+            t1 -- release time(in millisecons)
+            t2 -- gap between release time and tap time(in millisecons)
 
         Return True if accepted, False if rejected.
         """
