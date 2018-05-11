@@ -10,9 +10,18 @@ A Python interface to control the [AIBird software](https://aibirds.org)
 * ant
 * python
 
-### Installing
-
+### Running
+The server side
 ```bash
-cd server
-ant
+$ cd server
+$ ant
+```
+The client side
+```python
+import aibird_client
+abc = aibird_client.AIBirdClient()
+abc.connect()
+# Do whatever you want to do
+img = abc.screenshot()
+process_screenshot(img)         # A user defined code
 ```
