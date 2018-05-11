@@ -1,8 +1,8 @@
 import sys
-import client
+import aibird_client
 
 def main():
-    abc = client.AIBirdClient()
+    abc = aibird_client.AIBirdClient()
     abc.connect()
     while True:
         c = sys.stdin.read(1)

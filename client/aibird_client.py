@@ -1,7 +1,7 @@
 """AIBird Client module"""
 import socket
 import numpy as np
-import message
+import aibird_message
 
 TIMEOUT = 30         # Timeout value for the socket
 MAXTRIALS = 5       # Max number of zoom tries
@@ -88,13 +88,13 @@ class AIBirdClient:
     @property
     def screenshot(self):
         """ A numpy array containing the screenshot"""
-        self.socket.sendall(message.get_screenshot())
-        size, width, height = message.recv_screenshot_size(
-            self.socket.recv(message.LEN_SCREENSHOT))
+        self.socket.sendall(aibird_message.get_screenshot())
+        size, width, height = aibird_message.recv_screenshot_size(
+            self.socket.recv(aibird_message.LEN_SCREENSHOT))
         img_data = []
         for _ in range(size):
-            pixel = self.socket.recv(message.LEN_PIXEL)
-            img_data.append(message.recv_pixel(pixel))
+            pixel = self.socket.recv(aibird_message.LEN_PIXEL)
+            img_data.append(aibird_message.recv_pixel(pixel))
         img = np.asarray(img_data, dtype=np.uint8)
         img.resize(height, width, 3)
         return img
@@ -105,20 +105,20 @@ class AIBirdClient:
 
         Return a GameState object.
         """
-        self.socket.sendall(message.get_state())
-        return message.recv_state(self.socket.recv(message.LEN_GET_STATE))
+        self.socket.sendall(aibird_message.get_state())
+        return aibird_message.recv_state(self.socket.recv(aibird_message.LEN_GET_STATE))
 
     @property
     def is_level_over(self):
         """Send is level over query.
         Return True if level is over. False otherwise
         """
-        return self._send_and_recv_result(message.get_is_level_over())
+        return self._send_and_recv_result(aibird_message.get_is_level_over())
 
     def _get_score(self):
         """Request the server for my score"""
-        self.socket.sendall(message.get_my_score())
-        return message.recv_score(self.socket.recv(message.LEN_GET_SCORE))
+        self.socket.sendall(aibird_message.get_my_score())
+        return aibird_message.recv_score(self.socket.recv(aibird_message.LEN_GET_SCORE))
 
     def _get_cached_score(self):
         return self._scores[self._current_level - 1]
@@ -129,7 +129,7 @@ class AIBirdClient:
         Return True if succeeded, False otherwise.
         """
         self.socket.sendall(msg)
-        return message.recv_result(self.socket.recv(message.LEN_ETC))
+        return aibird_message.recv_result(self.socket.recv(aibird_message.LEN_ETC))
 
     def cart_shoot(self, dx, dy, t1, t2, mode='safe'):
         """Send cart_shoot request.
@@ -152,7 +152,7 @@ class AIBirdClient:
             raise Exception('cart_shoot: reached MAXTRIALS')
 
         result = self._send_and_recv_result(
-            message.cart_shoot(fx, fy, dx, dy, t1, t2, mode))
+            aibird_message.cart_shoot(fx, fy, dx, dy, t1, t2, mode))
         if result:
             initial_score = self._get_cached_score()
             return self.current_score - initial_score
@@ -179,7 +179,7 @@ class AIBirdClient:
         else:
             raise Exception('cart_shoot: reached MAXTRIALS')
         result = self._send_and_recv_result(
-            message.polar_shoot(fx, fy, r, theta, t1, t2, mode))
+            aibird_message.polar_shoot(fx, fy, r, theta, t1, t2, mode))
         if result:
             initial_score = self._get_cached_score()
             return self.current_score - initial_score
@@ -189,19 +189,19 @@ class AIBirdClient:
         """Send zoom in request.
         Return True if succeeded, False otherwise.
         """
-        return self._send_and_recv_result(message.zoom_in())
+        return self._send_and_recv_result(aibird_message.zoom_in())
 
     def zoom_out(self):
         """Send zoom out request.
         Return True if succeeded, False otherwise.
         """
-        return self._send_and_recv_result(message.zoom_out())
+        return self._send_and_recv_result(aibird_message.zoom_out())
 
     def click_in_center(self):
         """Send click in center request.
         Return True if succeeded, False otherwise.
         """
-        return self._send_and_recv_result(message.click_in_center())
+        return self._send_and_recv_result(aibird_message.click_in_center())
 
     def next_level(self):
         """ Load next level """
@@ -215,7 +215,7 @@ class AIBirdClient:
         """Send load level `level` request.
         Return True if succeeded, False otherwise.
         """
-        result = self._send_and_recv_result(message.load_level(level))
+        result = self._send_and_recv_result(aibird_message.load_level(level))
         if result:
             self._current_level = level
         return result
@@ -224,4 +224,4 @@ class AIBirdClient:
         """Send restart level request.
         Return True if succeeded, False otherwise.
         """
-        return self._send_and_recv_result(message.restart_level())
+        return self._send_and_recv_result(aibird_message.restart_level())
