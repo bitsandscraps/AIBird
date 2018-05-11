@@ -30,7 +30,7 @@ process_screenshot(img)         # A user defined code
 
 ## Issues
 The AIBird software parsed the in game score by evaluating the MD5 hash of the numbers.
-The following is an excerpt from [GameStateExtractor.java](server/src/ab/vision/GameStateExtractor.java)
+The following is an excerpt from [server/src/ab/vision/GameStateExtractor.java](server/src/ab/vision/GameStateExtractor.java)
 ```java
 int value = 0;
 if (letterHash.equals("12908cffd382ed43a990cc413f9c4aa6")) {
