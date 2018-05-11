@@ -189,29 +189,29 @@ public class GameStateExtractor {
 			final String letterHash = VisionUtils.imageDigest(letterImage);
 
 			int value = 0;
-			if (letterHash.equals("62d05c5ce368be507a096aa6b5c68aeb")) {
+			if (letterHash.equals("12908cffd382ed43a990cc413f9c4aa6")) {
 				value = 1;
-			} else if (letterHash.equals("518b4a3878a75aad32e23da4781e4c14")) {
+			} else if (letterHash.equals("1a2913c65f17ea2ad3de7b883a38f130")) {
 				value = 2;
-			} else if (letterHash.equals("be2b93e09c0f94a7c93b1b9cc675b26d")) {
+			} else if (letterHash.equals("4a02d237a153b396546059d00a9c31c9")) {
 				value = 3;
-			} else if (letterHash.equals("3171f145ff67389b22d50ade7a13b5f7")) {
+			} else if (letterHash.equals("db413d970283c7fabe5f1c8e60b29c7d")) {
 				value = 4;
-			} else if (letterHash.equals("96c7dc988a5ad5aa50c3958a0f7869f4")) {
+			} else if (letterHash.equals("d1539590da35f4350a785250424bcba7")) {
 				value = 5;
-			} else if (letterHash.equals("049b9aa34adf05ff2cca8cd4057a4d6b")) {
+			} else if (letterHash.equals("c7c2bd28cc81c1604cf263a162bf6b68")) {
 				value = 6;
-			} else if (letterHash.equals("897aca1b39d4e2f6bc58b658e8819191")) {
+			} else if (letterHash.equals("2c2b6b0493a25fcbb7482f6affacb9da")) {
 				value = 7;
-			} else if (letterHash.equals("e66e8aca895a06c1c9200b1b6b781567")) {
+			} else if (letterHash.equals("357589065a43445cae8fc14c1c3eb41c")) {
 				value = 8;
-			} else if (letterHash.equals("41c3010757c2e707146aa5d136e72c7a")) {
+			} else if (letterHash.equals("13849e06f884988983e71bfe3a318d4d")) {
 				value = 9;
 			}
 
 			score = 10 * score + value;
-			// System.out.println(i + " : " + letters[i] + " : " + letterHash +
-			// " : " + value);
+			System.out.println(i + " : " + letters[i] + " : " + letterHash +
+			 " : " + value);
 		}            
         
 		/*

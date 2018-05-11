@@ -25,6 +25,7 @@ MID_FULL_ZOOM_IN = 35
 MID_CLICK_IN_CENTER = 36
 MID_LOAD_LEVEL = 51
 MID_RESTART_LEVEL = 52
+MID_IS_LEVEL_OVER = 60
 
 # Length of response messages
 LEN_SCREENSHOT = 4 + 4          # Width = 4, Height = 4
@@ -123,7 +124,7 @@ def get_my_score():
 
 def recv_score(result):
     """Parse a response of a score request message."""
-    return struct.unpack('!i', result)
+    return struct.unpack('!i', result)[0]
 
 # def get_current_level():
 #     """Formulate a message requesting the current level information"""
@@ -190,6 +191,10 @@ def load_level(level):
 def restart_level():
     """Formulate a restart level request message"""
     return struct.pack('!b', MID_RESTART_LEVEL)
+
+def get_is_level_over():
+    """Formulate is level over query message"""
+    return struct.pack('!b', MID_IS_LEVEL_OVER)
 
 def recv_result(result):
     """Parse a response of the following request messages

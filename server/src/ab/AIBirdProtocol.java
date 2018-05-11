@@ -1,11 +1,15 @@
 package ab;
 import java.io.*;
 import java.awt.image.BufferedImage;
+import java.util.concurrent.TimeUnit;
+import java.util.List;
 import javax.imageio.ImageIO;
 import ab.other.ActionRobot;
 import ab.other.Shot;
 import ab.utils.StateUtil;
+import ab.vision.ABObject;
 import ab.vision.GameStateExtractor.GameState;
+import ab.vision.Vision;
 
 public class AIBirdProtocol {
         private final byte DOSCREENSHOT = 11;
@@ -19,6 +23,7 @@ public class AIBirdProtocol {
         private final byte FULLZOOMIN = 35;
         private final byte LOADLEVEL = 51;
         private final byte RESTARTLEVEL = 52;
+        private final byte ISLEVELOVER = 60;
 
         private ActionRobot aRobot;
         private int curLevel = 1;
@@ -39,6 +44,7 @@ public class AIBirdProtocol {
                         case FULLZOOMOUT:
                         case FULLZOOMIN:
                         case RESTARTLEVEL:
+                        case ISLEVELOVER:
                                 result = 0;
                                 break;
                         case LOADLEVEL:
@@ -80,6 +86,8 @@ public class AIBirdProtocol {
                                 return polarShootSafe(theInput);
                         case POLARSHOOTFAST:
                                 return polarShootFast(theInput);
+                        case ISLEVELOVER:
+                                return isLevelOver();
                         default:
                                 assert false: "Unknown MID: " + mid + ")";
                                 return new byte[1];
@@ -141,7 +149,11 @@ public class AIBirdProtocol {
         private byte[] cartShootSafe(int[] shotInfo) throws IOException {
                 Shot shot = new Shot(shotInfo[0], shotInfo[1], shotInfo[2], shotInfo[3], shotInfo[4], shotInfo[5]);
                 aRobot.cshoot(shot);
-                return this.writeInt(1);
+                try {
+                        TimeUnit.SECONDS.sleep(15);
+                } finally {
+                        return this.writeInt(1);
+                }
         }
 
         private byte[] cartShootFast(int[] shotInfo) throws IOException {
@@ -167,6 +179,36 @@ public class AIBirdProtocol {
                 int dy = Math.toIntExact(Math.round(r * Math.sin(theta)));
                 Shot shot = new Shot(shotInfo[0], shotInfo[1], dx, dy, shotInfo[4], shotInfo[5]);
                 aRobot.cFastshoot(shot);
-                return this.writeInt(1);
+                try {
+                        TimeUnit.SECONDS.sleep(15);
+                } finally {
+                        return this.writeInt(1);
+                }
+        }
+
+        private byte[] isLevelOver() throws IOException {
+                GameState state = aRobot.getState();
+                if (state != GameState.PLAYING) {
+                        Vision vision = getVision();
+                        // get Birds
+                        List<ABObject> birds = vision.findBirdsMBR();
+                        if (birds.isEmpty()) {   // No birds level is over.
+                                return this.writeInt(1);
+                        }
+                        // get Pigs
+                        List<ABObject> pigs = vision.findPigsMBR();
+                        if (pigs.isEmpty()) {   // No pigs level is over.
+                                return this.writeInt(1);
+                        }
+                }
+                return this.writeInt(0);
+        }
+
+        private Vision getVision() {
+                // capture Image
+                BufferedImage screenshot = ActionRobot.doScreenShot();
+                // process image
+                return new Vision(screenshot);
         }
 }
+

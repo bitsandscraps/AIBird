@@ -36,35 +36,58 @@ class AIBirdClient:
     Attributes
         host (str): address of AIBird Server. Default is `localhost`
         port (int): port of AIBird Server. Default is `2004`
-        team_id(int): team ID. Default is `1`
 
     Usage:
         client = AIBirdClient()
         client.connect()
         # Do whatever you want to do.
-        img = client.screenshot()
+        img = client.screenshot
         shoot = process_screenshot(img)     # A user defined function
         client.polar_shoot(*shoot)
     """
-    def __init__(self, host='localhost', port=2004, team_id=1):
+    def __init__(self, host='localhost', port=2004):
         self.host = host
         self.port = port
-        self.team_id = team_id
         self.socket = None
         self.level = None
-        self.current_level = 1
+        self._scores = [0] * 21
+        self._current_level = 1
 
     def connect(self):
         """Connect to AIBird server."""
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.settimeout(TIMEOUT)
         self.socket.connect((self.host, self.port))
-        self.load_level(self.current_level)
+        self._load_level(self._current_level)
 
+    @property
+    def current_level(self):
+        """ Return current level """
+        return self._current_level
+
+    @current_level.setter
+    def current_level(self, level):
+        if level > 21 and level < 0:
+            print("Level must be between 0 and 21. Received {}.".format(level))
+        else:
+            self._current_level = level
+            self._load_level(level)
+
+    @property
+    def total_score(self):
+        """ Sum of the scores for each level(there are 21 of them) """
+        return sum(self._scores)
+
+    @property
+    def current_score(self):
+        """ Score of the current level """
+        score = self._get_score()
+        self._scores[self._current_level - 1] = score
+        return score
+
+    @property
     def screenshot(self):
-        """Get screenshot
-
-        Return a numpy array containing the screenshot"""
+        """ A numpy array containing the screenshot"""
         self.socket.sendall(message.get_screenshot())
         size, width, height = message.recv_screenshot_size(
             self.socket.recv(message.LEN_SCREENSHOT))
@@ -76,6 +99,7 @@ class AIBirdClient:
         img.resize(height, width, 3)
         return img
 
+    @property
     def state(self):
         """Get current state
 
@@ -84,16 +108,22 @@ class AIBirdClient:
         self.socket.sendall(message.get_state())
         return message.recv_state(self.socket.recv(message.LEN_GET_STATE))
 
-    def my_score(self):
-        """Get my score for level `level`
-
-        If level is not specified, returns the list of length 21, containing the scores
-        for each level.
+    @property
+    def is_level_over(self):
+        """Send is level over query.
+        Return True if level is over. False otherwise
         """
+        return self._send_and_recv_result(message.get_is_level_over())
+
+    def _get_score(self):
+        """Request the server for my score"""
         self.socket.sendall(message.get_my_score())
         return message.recv_score(self.socket.recv(message.LEN_GET_SCORE))
 
-    def send_and_recv_result(self, msg):
+    def _get_cached_score(self):
+        return self._scores[self._current_level - 1]
+
+    def _send_and_recv_result(self, msg):
         """Send msg and parse its result.
 
         Return True if succeeded, False otherwise.
@@ -121,8 +151,12 @@ class AIBirdClient:
         else:
             raise Exception('cart_shoot: reached MAXTRIALS')
 
-        return self.send_and_recv_result(
+        result = self._send_and_recv_result(
             message.cart_shoot(fx, fy, dx, dy, t1, t2, mode))
+        if result:
+            initial_score = self._get_cached_score()
+            return self.current_score - initial_score
+        return -1
 
     def polar_shoot(self, r, theta, t1, t2, mode='safe'):
         """Send cart_shoot request.
@@ -144,38 +178,50 @@ class AIBirdClient:
                 break
         else:
             raise Exception('cart_shoot: reached MAXTRIALS')
-        return self.send_and_recv_result(
+        result = self._send_and_recv_result(
             message.polar_shoot(fx, fy, r, theta, t1, t2, mode))
+        if result:
+            initial_score = self._get_cached_score()
+            return self.current_score - initial_score
+        return -1
 
     def zoom_in(self):
         """Send zoom in request.
         Return True if succeeded, False otherwise.
         """
-        return self.send_and_recv_result(message.zoom_in())
+        return self._send_and_recv_result(message.zoom_in())
 
     def zoom_out(self):
         """Send zoom out request.
         Return True if succeeded, False otherwise.
         """
-        return self.send_and_recv_result(message.zoom_out())
+        return self._send_and_recv_result(message.zoom_out())
 
     def click_in_center(self):
         """Send click in center request.
         Return True if succeeded, False otherwise.
         """
-        return self.send_and_recv_result(message.click_in_center())
+        return self._send_and_recv_result(message.click_in_center())
 
-    def load_level(self, level):
+    def next_level(self):
+        """ Load next level """
+        if self.current_level < 21:
+            self.current_level = self.current_level + 1
+        else:
+            print("End of level.")
+
+
+    def _load_level(self, level):
         """Send load level `level` request.
         Return True if succeeded, False otherwise.
         """
-        result = self.send_and_recv_result(message.load_level(level))
+        result = self._send_and_recv_result(message.load_level(level))
         if result:
-            self.current_level = level
+            self._current_level = level
         return result
 
     def restart_level(self):
         """Send restart level request.
         Return True if succeeded, False otherwise.
         """
-        return self.send_and_recv_result(message.restart_level())
+        return self._send_and_recv_result(message.restart_level())

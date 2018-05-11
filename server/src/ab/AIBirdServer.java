@@ -18,28 +18,29 @@ public class AIBirdServer {
                 }
                 
                 System.err.println("Client server will be opened on port " + portNumber);
-
-                try (
-                        ServerSocket serverSocket = new ServerSocket(portNumber);
-                        Socket clientSocket = serverSocket.accept();
-                        OutputStream out = clientSocket.getOutputStream();
-                        DataInputStream in = new DataInputStream(clientSocket.getInputStream());
-                ) {
-                        AIBirdProtocol abp = new AIBirdProtocol();
-                        while (true) {
-                                System.out.println("In server loop.");
-                                byte mid = in.readByte();
-                                System.out.println("MID = " + mid);
-                                int length = abp.numberOfIntsToReadMore(mid);
-                                for (int i = 0; i < length; i++) {
-                                        buffer[i] = in.readInt();
+                ServerSocket serverSocket = new ServerSocket(portNumber);
+                while (true) {
+                        try (
+                                Socket clientSocket = serverSocket.accept();
+                                OutputStream out = clientSocket.getOutputStream();
+                                DataInputStream in = new DataInputStream(clientSocket.getInputStream());
+                        ) {
+                                AIBirdProtocol abp = new AIBirdProtocol();
+                                while (true) {
+                                        System.out.println("In server loop.");
+                                        byte mid = in.readByte();
+                                        System.out.println("MID = " + mid);
+                                        int length = abp.numberOfIntsToReadMore(mid);
+                                        for (int i = 0; i < length; i++) {
+                                                buffer[i] = in.readInt();
+                                        }
+                                        out.write(abp.processInput(mid, buffer));
                                 }
-                                out.write(abp.processInput(mid, buffer));
+                        } catch(IOException e){
+                                System.out.println("Exception caught when trying to listen on port "
+                                        + portNumber + " or listening for a connection.");
+                                System.out.println(e.getMessage());
                         }
-                } catch(IOException e){
-                        System.out.println("Exception caught when trying to listen on port "
-                                + portNumber + " or listening for a connection.");
-                        System.out.println(e.getMessage());
                 }
         }
 }

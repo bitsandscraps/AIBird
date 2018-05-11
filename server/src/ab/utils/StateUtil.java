@@ -56,9 +56,10 @@ public class StateUtil {
 	    
         GameStateExtractor gameStateExtractor = new GameStateExtractor();
         GameState state = gameStateExtractor.getGameState(image);
-        if (state == GameState.PLAYING)
+        if (state == GameState.PLAYING) {
         	score = gameStateExtractor.getScoreInGame(image);
-        else
+                System.out.println("in game score: " + score);
+        } else
         	if(state == GameState.WON)
         		score = gameStateExtractor.getScoreEndGame(image);
        if(score == -1)
