@@ -58,7 +58,7 @@ public class AIBirdProtocol {
                         case CARTSHOOTFAST:
                         case POLARSHOOTSAFE:
                         case POLARSHOOTFAST:
-                                result = 6;
+                                result = 3;
                                 break;
                         default:
                                 assert false: "Unknown MID: " + mid;
@@ -69,32 +69,32 @@ public class AIBirdProtocol {
         public byte[] processInput(byte mid, int[] theInput) throws IOException {
                 switch (mid) {
                         case DOSCREENSHOT:
-                                return doScreenShot(theInput);
+                                return doScreenShot();
                         case STATE:
-                                return state(theInput);
+                                return state();
                         case MYSCORE:
-                                return myScore(theInput);
+                                return myScore();
                         case FULLZOOMOUT:
-                                return fullZoomOut(theInput);
+                                return fullZoomOut();
                         case FULLZOOMIN:
-                                return fullZoomIn(theInput);
+                                return fullZoomIn();
                         case RESTARTLEVEL:
-                                return restartLevel(theInput);
+                                return restartLevel();
                         case LOADLEVEL:
-                                return loadLevel(theInput);
+                                return loadLevel(theInput[0]);
                         case CARTSHOOTSAFE:
-                                return cartShootSafe(theInput);
+                                return cartShoot(true, theInput[0], theInput[1], theInput[2]);
                         case CARTSHOOTFAST:
-                                return cartShootFast(theInput);
+                                return cartShoot(false, theInput[0], theInput[1], theInput[2]);
                         case POLARSHOOTSAFE:
-                                return polarShootSafe(theInput);
+                                return polarShoot(true, theInput[0], theInput[1], theInput[2]);
                         case POLARSHOOTFAST:
-                                return polarShootFast(theInput);
+                                return polarShoot(false, theInput[0], theInput[1], theInput[2]);
                         case ISLEVELOVER:
                                 return isLevelOver();
                         default:
                                 assert false: "Unknown MID: " + mid + ")";
-                                return new byte[1];
+                                return new byte[1];             // Never Used
                 }
         }
 
@@ -105,7 +105,7 @@ public class AIBirdProtocol {
                 return bos.toByteArray();
         }
 
-        private byte[] doScreenShot(int[] theInput) throws IOException {
+        private byte[] doScreenShot() throws IOException {
                 BufferedImage screenshot = ActionRobot.doScreenShot();
                 ByteArrayOutputStream bos = new ByteArrayOutputStream();
                 DataOutputStream dos = new DataOutputStream(bos);
@@ -115,38 +115,38 @@ public class AIBirdProtocol {
                 return bos.toByteArray();
         }
 
-        private byte[] state(int[] theInput) throws IOException {
+        private byte[] state() throws IOException {
                 GameState state = aRobot.getState();
-                return this.writeInt(state.getCode());
+                return writeInt(state.getCode());
         }
 
-        private byte[] myScore(int[] theInput) throws IOException {
+        private byte[] myScore() throws IOException {
                 int score = StateUtil.getScore(ActionRobot.proxy);
-                return this.writeInt(score);
+                return writeInt(score);
         }
 
-        private byte[] currentLevel(int[] theInput) throws IOException {
-                return this.writeInt(this.curLevel);
+        private byte[] currentLevel() throws IOException {
+                return writeInt(this.curLevel);
         }
 
-        private byte[] fullZoomOut(int[] theInput) throws IOException {
+        private byte[] fullZoomOut() throws IOException {
                ActionRobot.fullyZoomOut(); 
                return this.writeInt(1);
         }
 
-        private byte[] fullZoomIn(int[] theInput) throws IOException {
+        private byte[] fullZoomIn() throws IOException {
                ActionRobot.fullyZoomIn(); 
                return this.writeInt(1);
         }
 
-        private byte[] restartLevel(int[] theInput) throws IOException {
+        private byte[] restartLevel() throws IOException {
                 aRobot.restartLevel();
                 return this.writeInt(1);
         }
 
-        private byte[] loadLevel(int[] theInput) throws IOException {
-                System.out.println("loadLevel(" + theInput[0] + ")");
-                aRobot.loadLevel(theInput[0]);
+        private byte[] loadLevel(int level) throws IOException {
+                System.out.println("loadLevel(" + level + ")");
+                aRobot.loadLevel(level);
                 return this.writeInt(1);
         }
 
@@ -155,44 +155,27 @@ public class AIBirdProtocol {
                 return getReferencePoint(vision.findSling());
         }
 
-        private byte[] cartShootSafe(int[] shotInfo) throws IOException {
+        private byte[] cartShoot(boolean isSafe, int dx, int dy, int tap_time) throws IOException {
                 Point sling = findSling();
-                Shot shot = new Shot(sling.x, sling.y, shotInfo[2], shotInfo[3], shotInfo[4], shotInfo[5]);
+                Shot shot = new Shot(sling.x, sling.y, dx, dy, 0, tap_time);
                 aRobot.cshoot(shot);
+                if (!isSafe) return this.writeInt(1);
                 try {
                         TimeUnit.SECONDS.sleep(15);
                 } finally {
                         return this.writeInt(1);
                 }
         }
-
-        private byte[] cartShootFast(int[] shotInfo) throws IOException {
-                Point sling = findSling();
-                Shot shot = new Shot(sling.x, sling.y, shotInfo[2], shotInfo[3], shotInfo[4], shotInfo[5]);
-                aRobot.cFastshoot(shot);
-                return this.writeInt(1);
-        }
         
-        private byte[] polarShootSafe(int[] shotInfo) throws IOException {
-                double r = shotInfo[2];
-                double theta = Math.toRadians(((double) shotInfo[3]) / 100.0);
+        private byte[] polarShoot(boolean isSafe, int r_int, int theta_int, int tap_time) throws IOException {
+                double r = (double)r_int;
+                double theta = Math.toRadians(((double) theta_int) / 100.0);
                 int dx = Math.toIntExact(Math.round(r * Math.cos(theta) * -1));
                 int dy = Math.toIntExact(Math.round(r * Math.sin(theta)));
                 Point sling = findSling();
-                Shot shot = new Shot(sling.x, sling.y, dx, dy, shotInfo[4], shotInfo[5]);
-                System.out.printf("%d %d %d %d %d %d\n", shotInfo[0], shotInfo[1], dx, dy, shotInfo[4], shotInfo[5]);
+                Shot shot = new Shot(sling.x, sling.y, dx, dy, 0, tap_time);
                 aRobot.cshoot(shot);
-                return this.writeInt(1);
-        }
-
-        private byte[] polarShootFast(int[] shotInfo) throws IOException {
-                double r = shotInfo[2];
-                double theta = Math.toRadians(((double) shotInfo[3]) / 100.0);
-                int dx = Math.toIntExact(Math.round(r * Math.cos(theta) * -1));
-                int dy = Math.toIntExact(Math.round(r * Math.sin(theta)));
-                Point sling = findSling();
-                Shot shot = new Shot(sling.x, sling.y, dx, dy, shotInfo[4], shotInfo[5]);
-                aRobot.cFastshoot(shot);
+                if (!isSafe) return this.writeInt(1);
                 try {
                         TimeUnit.SECONDS.sleep(15);
                 } finally {

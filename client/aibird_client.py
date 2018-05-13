@@ -6,29 +6,29 @@ import aibird_message
 TIMEOUT = 30         # Timeout value for the socket
 MAXTRIALS = 5       # Max number of zoom tries
 
-FOCUS = [
-    (194, 326),     # Level 1
-    (208, 312),     # Level 2
-    (170, 336),     # Level 3
-    (194, 330),     # Level 4
-    (188, 335),     # Level 5
-    (184, 333),     # Level 6
-    (171, 335),     # Level 7
-    (184, 333),     # Level 8
-    (174, 319),     # Level 9
-    (175, 324),     # Level 10
-    (172, 333),     # Level 11
-    (164, 338),     # Level 12
-    (165, 336),     # Level 13
-    (171, 290),     # Level 14
-    (154, 338),     # Level 15
-    (156, 320),     # Level 16
-    (175, 333),     # Level 17
-    (171, 330),     # Level 18
-    (162, 337),     # Level 19
-    (177, 328),     # Level 20
-    (177, 303)      # Level 21
-]
+# FOCUS = [
+#     (194, 326),     # Level 1
+#     (208, 312),     # Level 2
+#     (170, 336),     # Level 3
+#     (194, 330),     # Level 4
+#     (188, 335),     # Level 5
+#     (184, 333),     # Level 6
+#     (171, 335),     # Level 7
+#     (184, 333),     # Level 8
+#     (174, 319),     # Level 9
+#     (175, 324),     # Level 10
+#     (172, 333),     # Level 11
+#     (164, 338),     # Level 12
+#     (165, 336),     # Level 13
+#     (171, 290),     # Level 14
+#     (154, 338),     # Level 15
+#     (156, 320),     # Level 16
+#     (175, 333),     # Level 17
+#     (171, 330),     # Level 18
+#     (162, 337),     # Level 19
+#     (177, 328),     # Level 20
+#     (177, 303)      # Level 21
+# ]
 
 class AIBirdClient:
     """Handles communication with the AIBird Server
@@ -131,20 +131,19 @@ class AIBirdClient:
         self.socket.sendall(msg)
         return aibird_message.recv_result(self.socket.recv(aibird_message.LEN_ETC))
 
-    def cart_shoot(self, dx, dy, t1, t2, mode='safe'):
+    def cart_shoot(self, dx, dy, tap_time, mode='safe'):
         """Send cart_shoot request.
 
         It assumes that the screen is fully zoomed out.
 
         Args
             dx, dy -- relative x, y coordinate of release point
-            t1 -- release time (in millisecons)
-            t2 -- gap between release time and tap time (in milliseconds)
+            tap_time -- in seconds
 
         Return True if accepted, False if rejected.
         """
-        level = self.current_level
-        fx, fy = FOCUS[level - 1]
+        # level = self.current_level
+        # fx, fy = FOCUS[level - 1]
         for _ in range(MAXTRIALS):
             if self.zoom_out():
                 break
@@ -152,13 +151,13 @@ class AIBirdClient:
             raise Exception('cart_shoot: reached MAXTRIALS')
 
         result = self._send_and_recv_result(
-            aibird_message.cart_shoot(fx, fy, dx, dy, t1, t2, mode))
+            aibird_message.cart_shoot(dx, dy, tap_time, mode))
         if result:
             initial_score = self._get_cached_score()
             return self.current_score - initial_score
         return -1
 
-    def polar_shoot(self, r, theta, t1, t2, mode='safe'):
+    def polar_shoot(self, r, theta, tap_time, mode='safe'):
         """Send cart_shoot request.
 
         It assumes that the screen is fully zoomed out.
@@ -166,20 +165,19 @@ class AIBirdClient:
         Args
             r -- the radial coordinate
             theta -- the angular coordinate by degree from -90.00 to 90.00.
-            t1 -- release time(in millisecons)
-            t2 -- gap between release time and tap time(in millisecons)
+            tap_time -- in seconds
 
         Return True if accepted, False if rejected.
         """
-        level = self.current_level
-        fx, fy = FOCUS[level - 1]
+        # level = self.current_level
+        # fx, fy = FOCUS[level - 1]
         for _ in range(MAXTRIALS):
             if self.zoom_out():
                 break
         else:
             raise Exception('cart_shoot: reached MAXTRIALS')
         result = self._send_and_recv_result(
-            aibird_message.polar_shoot(fx, fy, r, theta, t1, t2, mode))
+            aibird_message.polar_shoot(r, theta, tap_time, mode))
         if result:
             initial_score = self._get_cached_score()
             return self.current_score - initial_score

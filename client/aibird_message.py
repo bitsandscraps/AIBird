@@ -140,7 +140,7 @@ def recv_score(result):
 #         raise ValueError('Received current level = {}'.format(level))
 #     return level
 
-def cart_shoot(fx, fy, dx, dy, t1, t2, mode='safe'):
+def cart_shoot(dx, dy, tap_time, mode='safe'):
     """Formulate a Cartesian shoot request message.
 
     Keyword Arg
@@ -152,9 +152,10 @@ def cart_shoot(fx, fy, dx, dy, t1, t2, mode='safe'):
         mid = MID_CART_SHOOT_FAST
     else:
         raise ValueError('cart_shoot mode = {}'.format(mode))
-    return struct.pack('!biiiiii', mid, fx, fy, dx, dy, t1, t2)
+    tap_time = int(round(tap_time * 1000))      # Convert seconds to milliseconds
+    return struct.pack('!biii', mid, dx, dy, tap_time)
 
-def polar_shoot(fx, fy, r, theta, t1, t2, mode='safe'):
+def polar_shoot(r, theta, tap_time, mode='safe'):
     """Formulate a polar shoot request message.
 
     Keyword Arg
@@ -166,9 +167,10 @@ def polar_shoot(fx, fy, r, theta, t1, t2, mode='safe'):
         mid = MID_POLAR_SHOOT_FAST
     else:
         raise ValueError('polar_shoot mode = {}'.format(mode))
+    r = int(round(r))
     theta = int(round(theta * 100))
-    print(fx, fy, r, theta, t1, t2)
-    return struct.pack('!biiiiii', mid, fx, fy, r, theta, t1, t2)
+    tap_time = int(round(tap_time * 1000))      # Convert seconds to milliseconds
+    return struct.pack('!biii', mid, r, theta, tap_time)
 
 def zoom_out():
     """Formulate a zoom out request message"""
