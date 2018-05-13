@@ -1,4 +1,5 @@
 import sys
+import scipy.misc
 import aibird_client
 
 def main():
@@ -9,7 +10,7 @@ def main():
         if c == 'h':
             print('h: help, s: score, c: cshoot, p: pshoot, i: zoom in,',
                   'o: zoom out, l: load level, r: restart level'
-                  'e: is over?')
+                  'e: is over? a: screenshot')
         elif c == 's':
             print(abc.current_score)
         elif c == 'c':
@@ -32,6 +33,12 @@ def main():
             print(abc.restart_level())
         elif c == 'e':
             print(abc.is_level_over)
+        elif c == 'a':
+            ss = abc.screenshot
+            scipy.misc.imsave(input('filename? '), ss)
+
+
+
 
 
 if __name__ == "__main__":
