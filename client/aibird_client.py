@@ -1,10 +1,18 @@
 """AIBird Client module"""
+import base64
+import io
 import socket
+
 import numpy as np
+from PIL import Image
+from skimage.color import rgb2grey
+# from skimage.transform import rescale
+
 import aibird_message
 
 TIMEOUT = 30         # Timeout value for the socket
 MAXTRIALS = 5       # Max number of zoom tries
+DOWNSCALEFACTOR = 2
 
 # FOCUS = [
 #     (194, 326),     # Level 1
@@ -89,15 +97,18 @@ class AIBirdClient:
     def screenshot(self):
         """ A numpy array containing the screenshot"""
         self.socket.sendall(aibird_message.get_screenshot())
-        size, width, height = aibird_message.recv_screenshot_size(
+        size = aibird_message.recv_screenshot_size(
             self.socket.recv(aibird_message.LEN_SCREENSHOT))
-        img_data = []
-        for _ in range(size):
-            pixel = self.socket.recv(aibird_message.LEN_PIXEL)
-            img_data.append(aibird_message.recv_pixel(pixel))
-        img = np.asarray(img_data, dtype=np.uint8)
-        img.resize(height, width, 3)
+        # print(size, width, height)
+        data = b''
+        while len(data) < size:
+            packet = self.socket.recv(size - len(data))
+            data += packet
+        img = np.array(Image.open(io.BytesIO(base64.b64decode(data))))
+        img = img[100:-1, :, :]     # Crop away unnecessary parts
+        img = rgb2grey(img)
         return img
+        #return rescale(img, 1/DOWNSCALEFACTOR)  # The blue bird is almost invisible.
 
     @property
     def state(self):
@@ -202,11 +213,13 @@ class AIBirdClient:
         return self._send_and_recv_result(aibird_message.click_in_center())
 
     def next_level(self):
-        """ Load next level """
+        """ Load next level.
+        Return False if current level is 21, True otherwie.
+        """
         if self.current_level < 21:
             self.current_level = self.current_level + 1
-        else:
-            print("End of level.")
+            return True
+        return False
 
 
     def _load_level(self, level):

@@ -28,7 +28,7 @@ MID_RESTART_LEVEL = 52
 MID_IS_LEVEL_OVER = 60
 
 # Length of response messages
-LEN_SCREENSHOT = 4 + 4          # Width = 4, Height = 4
+LEN_SCREENSHOT = 4              # Size
 LEN_PIXEL = 3                   # RGB
 LEN_GET_STATE = 4
 LEN_GET_SCORE = 4          # Score for each Level = 4, 21 Levels
@@ -91,10 +91,10 @@ def recv_screenshot_size(result):
     Arguments
     result -- received data
 
-    returns the tuple (number of pixels, width, height)
+    returns the size of image
     """
-    width, height = struct.unpack('!ii', result)
-    return width * height, width, height        # with * height RGB tuples
+    return struct.unpack('!i', result)[0]
+    # return width * height, width, height        # with * height RGB tuples
 
 def recv_pixel(result):
     """Parse the stream into an image

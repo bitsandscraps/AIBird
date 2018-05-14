@@ -1,10 +1,12 @@
 package ab;
 import java.io.*;
 import java.awt.image.BufferedImage;
+import java.awt.Color;
 import java.awt.Point;
 import java.awt.Rectangle;
-import java.util.concurrent.TimeUnit;
+import java.util.Base64;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import javax.imageio.ImageIO;
 import ab.other.ActionRobot;
 import ab.other.Shot;
@@ -109,9 +111,11 @@ public class AIBirdProtocol {
                 BufferedImage screenshot = ActionRobot.doScreenShot();
                 ByteArrayOutputStream bos = new ByteArrayOutputStream();
                 DataOutputStream dos = new DataOutputStream(bos);
-                dos.writeInt(screenshot.getWidth());
-                dos.writeInt(screenshot.getHeight());
-                ImageIO.write(screenshot, "java", bos);
+                ByteArrayOutputStream ibos = new ByteArrayOutputStream();
+                ImageIO.write(screenshot, "png", ibos);
+                byte[] encoded = Base64.getEncoder().encode(ibos.toByteArray());
+                dos.writeInt(encoded.length);
+                dos.write(encoded);
                 return bos.toByteArray();
         }
 
