@@ -5,12 +5,8 @@ import numpy as np
 
 import aibird_client
 
-MINR = 50
-MAXR = 50
-MINTHETA = -90
-MAXTHETA = 90
-MINTAPTIME = 0.1
-MAXTAPTIME = 3
+ACTION_UPPER_BOUND = [50, 90, 4]
+ACTION_LOWER_BOUND = [5, -90, 0.1]
 MAXACTIONS = [3, 5, 4, 4, 4, 4, 4, 4, 4, 5, 4, 4, 4, 4, 4, 5, 3, 5, 4, 5, 8]
 
 class AIBirdEnv(gym.Env):
@@ -20,6 +16,8 @@ class AIBirdEnv(gym.Env):
         self.aibird_client = aibird_client.AIBirdClient()
         self.observation_space = None
         self.action_space = None
+        self.action_low = np.asarray(ACTION_LOWER_BOUND)
+        self.action_high = np.asarray(ACTION_UPPER_BOUND)
         self.meaningful_shot = [False] * 21
         self.action_count = 0
 
@@ -30,12 +28,10 @@ class AIBirdEnv(gym.Env):
         screenshot = self.aibird_client.screenshot
         self.observation_space = gym.spaces.Box(
             low=0, high=255, shape=screenshot.shape, dtype=screenshot.dtype)
-        action_low = np.asarray([MINR, MINTHETA, MINTAPTIME])
-        action_high = np.asarray([MAXR, MAXTHETA, MAXTAPTIME])
-        self.action_space = gym.spaces.Box(low=action_low, high=action_high, dtype=np.float64)
+        self.action_space = gym.spaces.Box(low=self.action_low, high=self.action_high, dtype=np.float64)
 
-    def step(self, action):
-        """Executes `action` and returns the reward.
+    def step(self, paction):
+        """Executes `paction` and returns the reward.
         """
         mode = 'safe'
         level = self.aibird_client.current_level
@@ -44,8 +40,8 @@ class AIBirdEnv(gym.Env):
         if ((self.action_count < MAXACTIONS[level - 1] - 1) and
                 (not self.meaningful_shot[level - 1])):
             mode = 'fast'
-        print(action)
-        reward = self.aibird_client.polar_shoot(action[0], action[1], action[2], mode)
+        action = self._trim_action(paction)
+        reward = self.aibird_client.polar_shoot(*action, mode)
         self.action_count += 1
         if reward > 0:
             # Performed a meaningful shot. From next time use safe mode to get
@@ -78,3 +74,9 @@ class AIBirdEnv(gym.Env):
         print("Reset")
         self.aibird_client.current_level = 1
         return self.aibird_client.screenshot
+
+    def _trim_action(self, paction):
+        action = np.minimum(self.action_high, paction)
+        return np.maximum(action, self.action_low)
+
+            
