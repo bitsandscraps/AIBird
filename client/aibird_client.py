@@ -57,7 +57,6 @@ class AIBirdClient:
         self.host = host
         self.port = port
         self.socket = None
-        self.level = None
         self._scores = [0] * 21
         self._current_level = 1
 
@@ -75,11 +74,14 @@ class AIBirdClient:
 
     @current_level.setter
     def current_level(self, level):
+        print('level set {}'.format(level))
         if level > 21 and level < 0:
             print("Level must be between 0 and 21. Received {}.".format(level))
         else:
-            self._current_level = level
-            self._load_level(level)
+            if self._load_level(level):
+                self._current_level = level
+            else:
+                print("Failed to load level {}".format(level))
 
     @property
     def total_score(self):

@@ -189,7 +189,6 @@ public class GameStateExtractor {
 			final String letterHash = VisionUtils.imageDigest(letterImage);
 
 			int value = 0;
-			/* Original Hash Values
                         if (letterHash.equals("62d05c5ce368be507a096aa6b5c68aeb")) {
 				value = 1;
 			} else if (letterHash.equals("518b4a3878a75aad32e23da4781e4c14")) {
@@ -208,7 +207,8 @@ public class GameStateExtractor {
 				value = 8;
 			} else if (letterHash.equals("41c3010757c2e707146aa5d136e72c7a")) {
 				value = 9;
-			}*/
+			}
+                        /* Hash values for JDK 10
 			if (letterHash.equals("12908cffd382ed43a990cc413f9c4aa6")) {
 				value = 1;
 			} else if (letterHash.equals("1a2913c65f17ea2ad3de7b883a38f130")) {
@@ -227,7 +227,7 @@ public class GameStateExtractor {
 				value = 8;
 			} else if (letterHash.equals("13849e06f884988983e71bfe3a318d4d")) {
 				value = 9;
-			}
+			} */
 
 			score = 10 * score + value;
 			System.out.println(i + " : " + letters[i] + " : " + letterHash +

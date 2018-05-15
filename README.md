@@ -53,5 +53,5 @@ if (letterHash.equals("12908cffd382ed43a990cc413f9c4aa6")) {
         value = 9;
 }
 ```
-I am not sure why but the hash values in the original AIBird software did not work on my machine.
-So I have changed the values. You may also need to do that.
+I am not sure why but the hash values in the original AIBird software did not work for JDK 10.
+You may also need to do that.

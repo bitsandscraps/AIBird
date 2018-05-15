@@ -32,11 +32,11 @@ public class AIBirdProtocol {
         private final double Y_OFFSET = 0.65;
 
         private ActionRobot aRobot;
-        private int curLevel = 1;
+        // private int curLevel = 1;
 
         AIBirdProtocol() {
                 System.err.println("AIBirdProtocol");
-                this.aRobot = new ActionRobot();
+                aRobot = new ActionRobot();
                 System.err.println("ActionRobot");
                 ActionRobot.GoFromMainMenuToLevelSelection();
         }
@@ -129,45 +129,53 @@ public class AIBirdProtocol {
                 return writeInt(score);
         }
 
-        private byte[] currentLevel() throws IOException {
-                return writeInt(this.curLevel);
-        }
+        /* private byte[] currentLevel() throws IOException {
+                return writeInt(curLevel);
+        } */
 
         private byte[] fullZoomOut() throws IOException {
                ActionRobot.fullyZoomOut(); 
-               return this.writeInt(1);
+               return writeInt(1);
         }
 
         private byte[] fullZoomIn() throws IOException {
                ActionRobot.fullyZoomIn(); 
-               return this.writeInt(1);
+               return writeInt(1);
         }
 
         private byte[] restartLevel() throws IOException {
                 aRobot.restartLevel();
-                return this.writeInt(1);
+                return writeInt(1);
         }
 
         private byte[] loadLevel(int level) throws IOException {
                 System.out.println("loadLevel(" + level + ")");
                 aRobot.loadLevel(level);
-                return this.writeInt(1);
+                aRobot.click();
+                return writeInt(1);
         }
 
         private Point findSling() {
                 Vision vision = getVision();
-                return getReferencePoint(vision.findSling());
+                Rectangle sling = vision.findSling();
+                if (sling == null) {
+                        return new Point(-1, -1);
+                }
+                return getReferencePoint(sling);
         }
 
         private byte[] cartShoot(boolean isSafe, int dx, int dy, int tap_time) throws IOException {
                 Point sling = findSling();
+                if (sling.x == -1) {
+                        return writeInt(0);
+                }
                 Shot shot = new Shot(sling.x, sling.y, dx, dy, 0, tap_time);
                 aRobot.cshoot(shot);
-                if (!isSafe) return this.writeInt(1);
+                if (!isSafe) return writeInt(1);
                 try {
                         TimeUnit.SECONDS.sleep(15);
                 } finally {
-                        return this.writeInt(1);
+                        return writeInt(1);
                 }
         }
         
@@ -177,32 +185,36 @@ public class AIBirdProtocol {
                 int dx = Math.toIntExact(Math.round(r * Math.cos(theta) * -1));
                 int dy = Math.toIntExact(Math.round(r * Math.sin(theta)));
                 Point sling = findSling();
+                if (sling.x == -1) {
+                        return writeInt(0);
+                }
                 Shot shot = new Shot(sling.x, sling.y, dx, dy, 0, tap_time);
                 aRobot.cshoot(shot);
-                if (!isSafe) return this.writeInt(1);
+                if (!isSafe) return writeInt(1);
                 try {
                         TimeUnit.SECONDS.sleep(15);
                 } finally {
-                        return this.writeInt(1);
+                        return writeInt(1);
                 }
         }
 
         private byte[] isLevelOver() throws IOException {
                 GameState state = aRobot.getState();
-                if (state != GameState.PLAYING) {
+                if (state == GameState.PLAYING) {
                         Vision vision = getVision();
-                        // get Birds
+                        /* get Birds
                         List<ABObject> birds = vision.findBirdsMBR();
                         if (birds.isEmpty()) {   // No birds level is over.
-                                return this.writeInt(1);
-                        }
+                                return writeInt(1);
+                        } */
                         // get Pigs
                         List<ABObject> pigs = vision.findPigsMBR();
                         if (pigs.isEmpty()) {   // No pigs level is over.
-                                return this.writeInt(1);
+                                return writeInt(1);
                         }
+                        return writeInt(0);
                 }
-                return this.writeInt(0);
+                return writeInt(1);
         }
 
         private Vision getVision() {

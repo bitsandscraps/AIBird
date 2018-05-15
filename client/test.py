@@ -15,14 +15,10 @@ def main():
             print(abc.current_score)
         elif c == 'c':
             arg = [int(x) for x in input('dx dy t1 t2: ').split()]
-            print(abc.cart_shoot(arg[0], arg[1], arg[2], arg[3]))
+            print(abc.cart_shoot(*arg))
         elif c == 'p':
-            arg = input('r theta t1 t2: ').split()
-            r = int(arg[0])
-            theta = float(arg[1])
-            t1 = int(arg[2])
-            t2 = int(arg[3])
-            print(abc.polar_shoot(r, theta, t1, t2))
+            arg = [float(x) for x in input('r theta t2: ').split()]
+            print(abc.polar_shoot(*arg))
         elif c == 'i':
             print(abc.zoom_in())
         elif c == 'o':
