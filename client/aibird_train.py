@@ -13,7 +13,6 @@ MIN_ACTION = [5, -90, 0.1]
 
 def train(penv, num_timesteps, seed):
     """ Slight modification of train method in baselines.ppo2.run_mujoco """
-
     from baselines.common import set_global_seeds
     from baselines.common.vec_env.vec_normalize import VecNormalize
     from baselines.ppo2 import ppo2
@@ -38,6 +37,9 @@ def train(penv, num_timesteps, seed):
                lr=3e-4,
                cliprange=0.2,
                total_timesteps=num_timesteps)
+
+def clip_screenshot(img):
+    return img[100:-1, :, :]    # Crop away unnecessary parts(the score part)
 
 def main():
     """ Train AIBird agent using PPO
