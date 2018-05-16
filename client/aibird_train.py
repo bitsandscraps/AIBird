@@ -8,7 +8,12 @@ from baselines import bench, logger
 
 import aibird_env
 
+MAX_ACTION = [50, 90, 4]
+MIN_ACTION = [5, -90, 0.1]
+
 def train(penv, num_timesteps, seed):
+    """ Slight modification of train method in baselines.ppo2.run_mujoco """
+
     from baselines.common import set_global_seeds
     from baselines.common.vec_env.vec_normalize import VecNormalize
     from baselines.ppo2 import ppo2
@@ -38,7 +43,7 @@ def main():
     """ Train AIBird agent using PPO
     """
     logger.configure()
-    env = aibird_env.AIBirdEnv()
+    env = aibird_env.AIBirdEnv(MAX_ACTION, MIN_ACTION,)
     env.startup()
     train(env, int(1e6), 0)
 

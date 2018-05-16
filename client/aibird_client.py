@@ -5,8 +5,6 @@ import socket
 
 import numpy as np
 from PIL import Image
-# from skimage.color import rgb2grey
-# from skimage.transform import rescale
 
 import aibird_message
 
@@ -107,8 +105,6 @@ class AIBirdClient:
             packet = self.socket.recv(size - len(data))
             data += packet
         img = np.array(Image.open(io.BytesIO(base64.b64decode(data))))
-        img = img[100:-1, :, :]     # Crop away unnecessary parts
-        # img = rgb2grey(img)       # Color information is lost
         return img
         #return rescale(img, 1/DOWNSCALEFACTOR)  # The blue bird is almost invisible.
 
