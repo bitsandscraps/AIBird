@@ -1,5 +1,7 @@
 """ An OpenAI environment interface for AIBird client """
 
+import time
+
 import gym
 import numpy as np
 from scipy.stats import logistic
@@ -8,14 +10,13 @@ from scipy.stats import logistic
 
 import aibird_client
 
-ACTION_UPPER_BOUND = [50, 90, 4]
-ACTION_LOWER_BOUND = [5, -90, 0.1]
 MAXACTIONS = [3, 5, 4, 4, 4, 4, 4, 4, 4, 5, 4, 4, 4, 4, 4, 5, 3, 5, 4, 5, 8]
 
 class AIBirdEnv(gym.Env):
     """OpenAI Environment for AIBird
 
     Args
+    max_action, min_action -- numpy array holding the values
     process_state -- function for preprocessing state
                      default value: do nothing
     process_action -- function for processing action
@@ -35,9 +36,8 @@ class AIBirdEnv(gym.Env):
                 """ Rescale (-infty, infty) to [-lower_bound, upper_bound] """
                 action = []
                 for act, amin, amax in zip(paction, min_action, max_action):
-                    mean = (amin + amax) / 2
                     scale = amax - amin
-                    action.append(logistic.cdf(act, mean, scale))
+                    action.append(logistic.cdf(act) * scale + amin)
                 return np.asarray(action)
             self._process_action = sigmoid
         else:
@@ -64,8 +64,9 @@ class AIBirdEnv(gym.Env):
         if ((self.action_count < MAXACTIONS[level - 1] - 1) and
                 (not self.meaningful_shot[level - 1])):
             mode = 'fast'
-        action = self._process_action(action)
-        reward = self.aibird_client.polar_shoot(*action, mode)
+        processed_action = self._process_action(action)
+        print(action, processed_action)
+        reward = self.aibird_client.polar_shoot(*processed_action, mode)
         self.action_count += 1
         if reward > 0:
             # Performed a meaningful shot. From next time use safe mode to get
@@ -73,7 +74,9 @@ class AIBirdEnv(gym.Env):
             self.meaningful_shot[level - 1] = True
         level_over = self.aibird_client.is_level_over
         observation = self._get_state()
+        print(level_over)
         if not (is_last_shot or level_over):
+            # Used all birds or popped all pigs
             return observation, reward, False, dict()
         if self.aibird_client.state.won():
             reward = self.aibird_client.current_score - score
@@ -83,7 +86,6 @@ class AIBirdEnv(gym.Env):
                 observation = self._get_state()
                 return observation, reward, False, dict()
         # Either lost or won all levels
-        print('Finished')
         return observation, reward, True, dict()
 
     def render(self, mode='human'):

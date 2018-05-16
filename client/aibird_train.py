@@ -1,5 +1,5 @@
 """ Train AIBird agent using PPO """
-#import numpy as np
+import numpy as np
 import tensorflow as tf
 
 from baselines import bench, logger
@@ -39,13 +39,15 @@ def train(penv, num_timesteps, seed):
                total_timesteps=num_timesteps)
 
 def clip_screenshot(img):
-    return img[100:-1, :, :]    # Crop away unnecessary parts(the score part)
+    """Crop away unnecessary parts(the score part)"""
+    return img[100:-1, :, :]
 
 def main():
     """ Train AIBird agent using PPO
     """
     logger.configure()
-    env = aibird_env.AIBirdEnv(MAX_ACTION, MIN_ACTION,)
+    env = aibird_env.AIBirdEnv(
+        np.asarray(MAX_ACTION), np.asarray(MIN_ACTION), clip_screenshot)
     env.startup()
     train(env, int(1e6), 0)
 
