@@ -58,7 +58,7 @@ public class StateUtil {
         GameState state = gameStateExtractor.getGameState(image);
         if (state == GameState.PLAYING) {
         	score = gameStateExtractor.getScoreInGame(image);
-                System.out.println("in game score: " + score);
+                // System.out.println("in game score: " + score);
         } else
         	if(state == GameState.WON)
         		score = gameStateExtractor.getScoreEndGame(image);
@@ -88,9 +88,10 @@ public class StateUtil {
 		   if(curr == GameState.WON || curr == GameState.PLAYING)
 		   {	
 			   current_score = _getScore(proxy);
-		   }
-		   else
-			   System.out.println(" Unexpected state: PLAYING");
+		   } else if (curr == GameState.LOST) {
+                           current_score = -1;
+                   } else
+			   System.out.println(" Unexpected state");
 		}
 		return current_score;
 	}

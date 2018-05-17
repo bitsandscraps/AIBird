@@ -230,8 +230,8 @@ public class GameStateExtractor {
 			} */
 
 			score = 10 * score + value;
-			System.out.println(i + " : " + letters[i] + " : " + letterHash +
-			 " : " + value);
+			//System.out.println(i + " : " + letters[i] + " : " + letterHash +
+			// " : " + value);
 		}            
         
 		/*

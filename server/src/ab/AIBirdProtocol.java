@@ -30,14 +30,13 @@ public class AIBirdProtocol {
         private final byte ISLEVELOVER = 60;
         private final double X_OFFSET = 0.5;
         private final double Y_OFFSET = 0.65;
+        private int score = 0;
 
         private ActionRobot aRobot;
         // private int curLevel = 1;
 
         AIBirdProtocol() {
-                System.err.println("AIBirdProtocol");
                 aRobot = new ActionRobot();
-                System.err.println("ActionRobot");
                 ActionRobot.GoFromMainMenuToLevelSelection();
         }
 
@@ -125,7 +124,6 @@ public class AIBirdProtocol {
         }
 
         private byte[] myScore() throws IOException {
-                int score = StateUtil.getScore(ActionRobot.proxy);
                 return writeInt(score);
         }
 
@@ -145,13 +143,19 @@ public class AIBirdProtocol {
 
         private byte[] restartLevel() throws IOException {
                 aRobot.restartLevel();
+                score = 0;
                 return writeInt(1);
         }
 
         private byte[] loadLevel(int level) throws IOException {
-                System.out.println("loadLevel(" + level + ")");
                 aRobot.loadLevel(level);
+                try {
+                        TimeUnit.MILLISECONDS.sleep(10);
+                } catch(InterruptedException e){
+                        e.printStackTrace();
+                }
                 aRobot.click();
+                score = 0;
                 return writeInt(1);
         }
 
@@ -170,10 +174,10 @@ public class AIBirdProtocol {
                         return writeInt(0);
                 }
                 Shot shot = new Shot(sling.x, sling.y, dx, dy, 0, tap_time);
-                aRobot.cshoot(shot);
+                aRobot.cFastshoot(shot);
                 if (!isSafe) return writeInt(1);
                 try {
-                        TimeUnit.SECONDS.sleep(15);
+                        scoreCheck();
                 } finally {
                         return writeInt(1);
                 }
@@ -189,10 +193,10 @@ public class AIBirdProtocol {
                         return writeInt(0);
                 }
                 Shot shot = new Shot(sling.x, sling.y, dx, dy, 0, tap_time);
-                aRobot.cshoot(shot);
+                aRobot.cFastshoot(shot);
                 if (!isSafe) return writeInt(1);
                 try {
-                        TimeUnit.SECONDS.sleep(15);
+                        scoreCheck();
                 } finally {
                         return writeInt(1);
                 }
@@ -228,6 +232,35 @@ public class AIBirdProtocol {
         public Point getReferencePoint(Rectangle sling) {
                 Point p = new Point((int)(sling.x + X_OFFSET * sling.width), (int)(sling.y + Y_OFFSET * sling.width));
                 return p;
+        }
+
+        private void scoreCheck() throws InterruptedException {
+                TimeUnit.SECONDS.sleep(2);
+                int old_score = score;
+                int same_score_count = 0;
+                // Check whether score is stable
+                while (same_score_count < 3) {
+                        TimeUnit.MILLISECONDS.sleep(300);
+                        score = StateUtil.getScore(ActionRobot.proxy);
+                        if (score == -1) {      // Lost
+                                score = old_score;
+                                return;
+                        } else if (score == old_score) {
+                                ++same_score_count;
+                        } else {
+                                same_score_count = 0;
+                        }
+                        old_score = score;
+                }
+                // get Pigs
+                if (getVision().findPigsMBR().isEmpty()) {   // No pigs level is over.
+                        GameState state = aRobot.getState();
+                        while (state != GameState.WON) {
+                                TimeUnit.MILLISECONDS.sleep(300);
+                                state = aRobot.getState();
+                        }
+                        score = StateUtil.getScore(ActionRobot.proxy);
+                }
         }
 }
 

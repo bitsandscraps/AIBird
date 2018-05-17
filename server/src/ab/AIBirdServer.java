@@ -27,9 +27,7 @@ public class AIBirdServer {
                         ) {
                                 AIBirdProtocol abp = new AIBirdProtocol();
                                 while (true) {
-                                        System.out.println("In server loop.");
                                         byte mid = in.readByte();
-                                        System.out.println("MID = " + mid);
                                         int length = abp.numberOfIntsToReadMore(mid);
                                         for (int i = 0; i < length; i++) {
                                                 buffer[i] = in.readInt();

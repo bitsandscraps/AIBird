@@ -8,7 +8,7 @@ from PIL import Image
 
 import aibird_message
 
-TIMEOUT = 30         # Timeout value for the socket
+TIMEOUT = 60         # Timeout value for the socket
 MAXTRIALS = 5       # Max number of zoom tries
 DOWNSCALEFACTOR = 2
 
@@ -72,7 +72,6 @@ class AIBirdClient:
 
     @current_level.setter
     def current_level(self, level):
-        print('level set {}'.format(level))
         if level > 21 and level < 0:
             print("Level must be between 0 and 21. Received {}.".format(level))
         else:
@@ -166,13 +165,12 @@ class AIBirdClient:
             return self.current_score - initial_score
         return -1
 
-    def polar_shoot(self, r, theta, tap_time, mode='safe'):
+    def polar_shoot(self, theta, tap_time, mode='safe'):
         """Send cart_shoot request.
 
         It assumes that the screen is fully zoomed out.
 
         Args
-            r -- the radial coordinate
             theta -- the angular coordinate by degree from -90.00 to 90.00.
             tap_time -- in seconds
 
@@ -186,7 +184,7 @@ class AIBirdClient:
         else:
             raise Exception('cart_shoot: reached MAXTRIALS')
         result = self._send_and_recv_result(
-            aibird_message.polar_shoot(r, theta, tap_time, mode))
+            aibird_message.polar_shoot(50, theta, tap_time, mode)) # always shoot max
         if result:
             initial_score = self._get_cached_score()
             return self.current_score - initial_score
