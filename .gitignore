@@ -9,6 +9,7 @@ __pycache__/
 
 baselines/
 screenshot/
+client/aibird_log
 
 # C extensions
 *.so
