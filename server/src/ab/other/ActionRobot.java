@@ -57,8 +57,7 @@ public class ActionRobot {
 				};
 				proxy.start();
 
-				System.out
-						.println("Server started on port: " + proxy.getPort());
+				System.out.println("Server started on port: " + proxy.getPort());
 
 				System.out.println("Waiting for client to connect");
 				proxy.waitForClients(1);
