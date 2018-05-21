@@ -44,11 +44,14 @@ class AIBirdEnv(gym.Env):
                       default value: map (-infty, infty) to action space via sigmoid
     """
 
-    def __init__(self, max_action, min_action,
+    def __init__(self, max_action, min_action, act_cont,
                  process_state=lambda x: x, process_action=None):
         self.aibird_client = aibird_client.AIBirdClient()
         self.observation_space = None
-        self.action_space = gym.spaces.Box(low=min_action, high=max_action, dtype=np.float64)
+        if act_cont:
+            self.action_space = gym.spaces.Box(low=min_action, high=max_action, dtype=np.float64)
+        else:
+            self.action_space = gym.spaces.Discrete(max_action - min_action + 1)
         self.action_count = 0
         self._process_state = process_state
         if process_action is None:

@@ -7,7 +7,6 @@ from socket import timeout
 from time import sleep
 
 import psutil
-import numpy as np
 import tensorflow as tf
 
 # from skimage.color import rgb2grey
@@ -18,7 +17,7 @@ from baselines import bench, logger
 import aibird_env
 
 MAX_ACTION = [90, 2.5]
-MIN_ACTION = [-90, 0.1]
+MIN_ACTION = [-10, 0.1]
 
 def train(penv, num_timesteps, seed, load_path=None):
     """ Slight modification of train method in baselines.ppo2.run_mujoco """
@@ -48,12 +47,22 @@ def train(penv, num_timesteps, seed, load_path=None):
                    lr=lambda f: f * 2.5e-4,
                    cliprange=lambda f: f * 0.1,
                    total_timesteps=int(num_timesteps * 1.1),
-                   save_interval=2, load_path=load_path)
+                   save_interval=1, load_path=load_path)
 
 def process_screensot(img):
     """Crop away unnecessary parts(the score part)"""
     cimg = img[100:-1, :, :]
     return rescale(cimg, 0.5)
+
+def quantize(act):
+    """ 60 actions : 12 angle actions * 5 tap time actions """
+    nangle = act % 12
+    ntap = (act - nangle) / 12 + 1      # use 1 ~ 5 rather than 0 ~ 4 values
+    tangle = nangle / 12
+    ttap = ntap / 5
+    angle = tangle * MAX_ACTION[0] + (1 - tangle) * MIN_ACTION[0]
+    tap = ttap * MAX_ACTION[1] + (1 - ttap) * MIN_ACTION[1]
+    return angle, tap
 
 def killserver():
     """ Kill AIBirdServer """
@@ -68,15 +77,17 @@ def killserver():
 def main():
     """ Train AIBird agent using PPO
     """
-    logger.configure('aibird_log')
+    logger.configure('aibird_log_discrete')
     curr_dir_path = os.path.dirname(os.path.realpath(__file__))
     server_path = os.path.abspath(os.path.join(curr_dir_path, os.pardir, 'server'))
     while True:
         try:
             # find the newest checkpoint
             checkdir = os.path.join(logger.get_dir(), 'checkpoints')
-            checkpoints = [os.path.join(checkdir, f) for f in os.listdir(checkdir)]
-            load_path = max(checkpoints, key=os.path.getctime)
+            load_path = None
+            if os.path.isdir(checkdir):
+                checkpoints = [os.path.join(checkdir, f) for f in os.listdir(checkdir)]
+                load_path = max(checkpoints, key=os.path.getctime)
             # run chrome and AIBirdServer
             with open('chrome.error', 'a') as chrome_error:
                 chrome = subprocess.Popen(["google-chrome-stable", "chrome.angrybirds.com"],
@@ -88,7 +99,8 @@ def main():
             sleep(10)
             # train
             env = aibird_env.AIBirdEnv(
-                np.asarray(MAX_ACTION), np.asarray(MIN_ACTION), process_screensot)
+                max_action=59, min_action=0, act_cont=False,
+                process_state=process_screensot, process_action=quantize)
             env.startup()
             train(env, int(1e6), 0, load_path)
         except timeout:

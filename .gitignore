@@ -10,6 +10,7 @@ __pycache__/
 baselines/
 screenshot/
 client/aibird_log
+client/aibird_log_discrete
 
 # C extensions
 *.so
