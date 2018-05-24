@@ -44,21 +44,22 @@ class AIBirdEnv(gym.Env):
                       default value: map (-infty, infty) to action space via sigmoid
     """
 
-    def __init__(self, max_action, min_action, act_cont,
+    def __init__(self, client_port, action_space, act_cont,
                  process_state=lambda x: x, process_action=None):
-        self.aibird_client = aibird_client.AIBirdClient()
+        self.aibird_client = aibird_client.AIBirdClient(port=client_port)
         self.observation_space = None
         if act_cont:
-            self.action_space = gym.spaces.Box(low=min_action, high=max_action, dtype=np.float64)
+            self.action_space = gym.spaces.Box(
+                low=action_space[0], high=action_space[1], dtype=np.float64)
         else:
-            self.action_space = gym.spaces.Discrete(max_action - min_action + 1)
+            self.action_space = gym.spaces.Discrete(action_space)
         self.action_count = 0
         self._process_state = process_state
         if process_action is None:
             def sigmoid(paction):
                 """ Rescale (-infty, infty) to [-lower_bound, upper_bound] """
                 action = []
-                for act, amin, amax in zip(paction, min_action, max_action):
+                for act, amin, amax in zip(paction, action_space[0], action_space[1]):
                     scale = amax - amin
                     action.append(logistic.cdf(act) * scale + amin)
                 return np.asarray(action)

@@ -6,6 +6,8 @@
     <property name="classes.dir" value="${build.dir}/classes"/>
     <property name="jar.dir" value="${build.dir}/jar"/>
     <property name="main-class" value="ab.AIBirdServer"/>
+    <property name="proxyport" value="9000"/>
+    <property name="clientport" value="2004"/>
 
     <path id="classpath">
         <fileset dir="${lib.dir}" includes="**/*.jar"/>
@@ -33,6 +35,8 @@
                 <path refid="classpath"/>
                 <path location="${jar.dir}/${ant.project.name}.jar"/>
             </classpath>
+            <sysproperty key="proxyport" value="${proxyport}"/>
+            <arg value="${clientport}"/>
         </java>
     </target>
 

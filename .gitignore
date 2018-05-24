@@ -11,6 +11,7 @@ baselines/
 screenshot/
 client/aibird_log
 client/aibird_log_discrete
+client/aibird_log_multi
 
 # C extensions
 *.so

@@ -44,7 +44,14 @@ public class ActionRobot {
 	static {
 		if (proxy == null) {
 			try {
-				proxy = new Proxy(9000) {
+                                int port;
+                                String proxyPort = System.getProperty("proxyport");
+                                if (proxyPort == null) {
+                                        port = 9000;
+                                } else {
+                                        port = Integer.parseInt(proxyPort);
+                                }
+				proxy = new Proxy(port) {
 					@Override
 					public void onOpen() {
 						System.out.println("Client connected");

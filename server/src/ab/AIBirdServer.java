@@ -11,7 +11,7 @@ public class AIBirdServer {
                 int[] buffer = new int[6];
 
                 if (args.length > 1) {
-                        System.err.println("Usage: java -jar AIBirdServer.jar [<port number>]");
+                        System.err.println("Usage: java -jar AIBirdServer.jar [<client port number>]");
                         System.exit(1);
                 } else if (args.length == 1) {
                         portNumber = Integer.parseInt(args[0]);
