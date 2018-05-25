@@ -6,7 +6,6 @@ import subprocess
 from socket import timeout
 from time import sleep
 
-import psutil
 import tensorflow as tf
 
 # from skimage.color import rgb2grey
@@ -16,9 +15,9 @@ from baselines import logger
 from baselines.bench import Monitor
 from baselines.common import set_global_seeds
 from baselines.common.vec_env.vec_frame_stack import VecFrameStack
-from baselines.common.vec_env.subproc_vec_env import SubprocVecEnv
 from baselines.ppo2 import ppo2
 from baselines.ppo2.policies import CnnPolicy
+from aibird_subproc_vec_env import SubprocVecEnv
 
 import aibird_env
 
@@ -69,28 +68,30 @@ def quantize(act):
     tap = ttap * MAX_ACTION[1] + (1 - ttap) * MIN_ACTION[1]
     return angle, tap
 
-def killserver():
-    """ Kill AIBirdServer """
-    output = subprocess.run("jps", stdout=subprocess.PIPE).stdout
-    for line in ''.join(map(chr, output)).rstrip('\n').split('\n'):
-        if len(line) == 2:
-            pid, name = line.split()
-            if name == 'AIBirdServer':
-                psutil.Process(int(pid)).terminate()
+# def killserver():
+#     """ Kill AIBirdServer """
+#     print('killserver')
+#     output = subprocess.run("jps", stdout=subprocess.PIPE).stdout
+#     for line in ''.join(map(chr, output)).rstrip('\n').split('\n'):
+#         if len(line) == 2:
+#             pid, name = line.split()
+#             if name == 'AIBirdServer':
+#                 psutil.Process(int(pid)).terminate()
+#     subprocess.run("jps")
 
 def prepare_env(server_path, chrome_user, client_port):
-    with open('chrome{}.error'.format(chrome_user), 'a') as chrome_error:
+    print('Preparing env', chrome_user, client_port)
+    with open('log/chrome{}.error'.format(chrome_user), 'a') as chrome_error:
         chrome = subprocess.Popen(['google-chrome-stable', 'chrome.angrybirds.com',
                                    '--profile-directory=Profile {}'.format(chrome_user)],
                                   stderr=chrome_error)
     sleep(10)
-    with open('server{}.log'.format(chrome_user), 'a') as server_log,\
-         open('server{}.error'.format(chrome_user), 'a') as server_error:
-        subprocess.Popen(["ant", "run", "-Dproxyport={}".format(8999 + chrome_user),
-                          "-Dclientport={}".format(client_port)], cwd=server_path,
-                         stdout=server_log, stderr=server_error)
+    with open('log/server{}.log'.format(chrome_user), 'a') as server_log:
+        server = subprocess.Popen(["ant", "run", "-Dproxyport={}".format(8999 + chrome_user),
+                                   "-Dclientport={}".format(client_port)],
+                                  cwd=server_path, stdout=server_log)
     sleep(10)
-    return chrome
+    return chrome, server
 
 def main():
     """ Train AIBird agent using PPO
@@ -98,19 +99,19 @@ def main():
     logger.configure('aibird_log_multi')
     curr_dir_path = os.path.dirname(os.path.realpath(__file__))
     server_path = os.path.abspath(os.path.join(curr_dir_path, os.pardir, 'server'))
-    chromes = []
+    # find the newest checkpoint
+    checkdir = os.path.join(logger.get_dir(), 'checkpoints')
+    load_path = None
+    if os.path.isdir(checkdir):
+        checkpoints = [os.path.join(checkdir, f) for f in os.listdir(checkdir)]
+        load_path = max(checkpoints, key=os.path.getctime)
     while True:
         try:
-            # find the newest checkpoint
-            checkdir = os.path.join(logger.get_dir(), 'checkpoints')
-            load_path = None
-            if os.path.isdir(checkdir):
-                checkpoints = [os.path.join(checkdir, f) for f in os.listdir(checkdir)]
-                load_path = max(checkpoints, key=os.path.getctime)
             # run chrome and AIBirdServer
+            external_programs = []
             env = []
             for i in range(1, 5):
-                chromes.append(prepare_env(server_path, i, 2000 + i))
+                external_programs.append(prepare_env(server_path, i, 2000 + i))
                 ienv = aibird_env.AIBirdEnv(
                     client_port=2000 + i, action_space=60, act_cont=False,
                     process_state=process_screensot, process_action=quantize)
@@ -120,15 +121,16 @@ def main():
             train(env, 4, int(1e6), 0, load_path)
         except timeout:
             # Kill chrome and server
+            print("Chrome crashed. Restarting....")
             tf.reset_default_graph()
-            for chrome in chromes:
-                chrome.kill()
-            killserver()
-            chromes = []
+            for chrome, server in external_programs:
+                chrome.terminate()
+                server.terminate()
+        except Exception as exception:
+            for chrome, server in external_programs:
+                chrome.terminate()
+                server.terminate()
+            raise exception
 
 if __name__ == "__main__":
-    try:
-        main()
-    except Exception as exception:
-        killserver()
-        raise exception
+    main()
