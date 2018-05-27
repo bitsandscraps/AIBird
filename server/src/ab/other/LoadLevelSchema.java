@@ -103,7 +103,7 @@ private boolean loadLevel(GameState state,int i)
 	}
 	else if(state == GameState.PLAYING)
 		{
-			proxy.send(new ProxyClickMessage(48,44));//Click the left most button, pause
+			proxy.send(new ProxyClickMessage(28,28));//Click the left most button, pause
 			  try {
 					Thread.sleep(1000);
 				} catch (InterruptedException e1) {

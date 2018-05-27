@@ -285,7 +285,7 @@ public class ActionRobot {
 
         public void resume() {
                 //Click the left most button, pause/resume
-                ActionRobot.proxy.send(new ProxyClickMessage(48,44));
+                ActionRobot.proxy.send(new ProxyClickMessage(28, 28));
                 try {
                         Thread.sleep(1000);
                 } catch (InterruptedException e1) {
