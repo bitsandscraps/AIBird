@@ -3,6 +3,9 @@ from socket import timeout
 import numpy as np
 from baselines.common.vec_env import VecEnv, CloudpickleWrapper
 
+SUCCESS = 0
+FAILURE = -1
+
 
 def worker(remote, parent_remote, env_fn_wrapper):
     parent_remote.close()
@@ -14,22 +17,22 @@ def worker(remote, parent_remote, env_fn_wrapper):
                 ob, reward, done, info = env.step(data)
                 if done:
                     ob = env.reset()
-                remote.send((ob, reward, done, info))
+                remote.send((SUCCESS, ob, reward, done, info))
             elif cmd == 'reset':
                 ob = env.reset()
-                remote.send(ob)
+                remote.send((SUCCESS, ob))
             elif cmd == 'reset_task':
                 ob = env.reset_task()
-                remote.send(ob)
+                remote.send((SUCCESS, ob))
             elif cmd == 'close':
                 remote.close()
                 break
             elif cmd == 'get_spaces':
-                remote.send((env.observation_space, env.action_space))
+                remote.send((SUCCESS, env.observation_space, env.action_space))
             else:
                 raise NotImplementedError
     except timeout:
-        remote.send('timed out')
+        remote.send((FAILURE,))
         remote.close()
 
 
@@ -43,7 +46,8 @@ class SubprocVecEnv(VecEnv):
         nenvs = len(env_fns)
         self.remotes, self.work_remotes = zip(*[Pipe() for _ in range(nenvs)])
         self.ps = [Process(target=worker, args=(work_remote, remote, CloudpickleWrapper(env_fn)))
-            for (work_remote, remote, env_fn) in zip(self.work_remotes, self.remotes, env_fns)]
+                   for (work_remote, remote, env_fn)
+                   in zip(self.work_remotes, self.remotes, env_fns)]
         for p in self.ps:
             p.daemon = True # if the main process crashes, we should not cause things to hang
             p.start()
@@ -51,7 +55,10 @@ class SubprocVecEnv(VecEnv):
             remote.close()
 
         self.remotes[0].send(('get_spaces', None))
-        observation_space, action_space = self.remotes[0].recv()
+        result = self.remotes[0].recv()
+        if result[0] != SUCCESS:
+            raise timeout
+        _, observation_space, action_space = result
         VecEnv.__init__(self, len(env_fns), observation_space, action_space)
 
     def step_async(self, actions):
@@ -63,7 +70,7 @@ class SubprocVecEnv(VecEnv):
         results = [remote.recv() for remote in self.remotes]
         self.waiting = False
         self._check_timeout(results)
-        obs, rews, dones, infos = zip(*results)
+        _, obs, rews, dones, infos = zip(*results)
         return np.stack(obs), np.stack(rews), np.stack(dones), infos
 
     def reset(self):
@@ -71,20 +78,22 @@ class SubprocVecEnv(VecEnv):
             remote.send(('reset', None))
         results = [remote.recv() for remote in self.remotes]
         self._check_timeout(results)
-        return np.stack(results)
+        _, obs = zip(*results)
+        return np.stack(obs)
 
     def reset_task(self):
         for remote in self.remotes:
             remote.send(('reset_task', None))
         results = [remote.recv() for remote in self.remotes]
         self._check_timeout(results)
-        return np.stack(results)
+        _, obs = zip(*results)
+        return np.stack(obs)
 
     def close(self):
         if self.closed:
             return
         if self.waiting:
-            for remote in self.remotes:            
+            for remote in self.remotes:
                 remote.recv()
         for remote in self.remotes:
             remote.send(('close', None))
@@ -94,7 +103,6 @@ class SubprocVecEnv(VecEnv):
 
     def _check_timeout(self, results):
         for result in results:
-            if result == 'timed out':
+            if result[0] != SUCCESS:
                 self.close()
                 raise timeout
-

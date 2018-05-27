@@ -282,4 +282,14 @@ public class ActionRobot {
 	public int getScore() {
 		return StateUtil.getScore(ActionRobot.proxy);
 	}
+
+        public void resume() {
+                //Click the left most button, pause/resume
+                ActionRobot.proxy.send(new ProxyClickMessage(48,44));
+                try {
+                        Thread.sleep(1000);
+                } catch (InterruptedException e1) {
+                        e1.printStackTrace();
+                }
+        }
 }

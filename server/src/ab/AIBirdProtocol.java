@@ -170,8 +170,9 @@ public class AIBirdProtocol {
 
         private byte[] cartShoot(boolean isSafe, int dx, int dy, int tap_time) throws IOException {
                 Point sling = findSling();
-                if (sling.x == -1) {
-                        return writeInt(0);
+                while (sling.x == -1) {
+                        aRobot.resume();
+                        sling = findSling();
                 }
                 Shot shot = new Shot(sling.x, sling.y, dx, dy, 0, tap_time);
                 aRobot.cFastshoot(shot);
@@ -189,8 +190,9 @@ public class AIBirdProtocol {
                 int dx = Math.toIntExact(Math.round(r * Math.cos(theta) * -1));
                 int dy = Math.toIntExact(Math.round(r * Math.sin(theta)));
                 Point sling = findSling();
-                if (sling.x == -1) {
-                        return writeInt(0);
+                while (sling.x == -1) {
+                        aRobot.resume();
+                        sling = findSling();
                 }
                 Shot shot = new Shot(sling.x, sling.y, dx, dy, 0, tap_time);
                 aRobot.cFastshoot(shot);

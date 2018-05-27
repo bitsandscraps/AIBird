@@ -1,4 +1,5 @@
 """ Train AIBird agent using PPO """
+import datetime
 import multiprocessing
 import os
 import sys
@@ -121,7 +122,7 @@ def main():
             train(env, 4, int(1e6), 0, load_path)
         except timeout:
             # Kill chrome and server
-            print("Chrome crashed. Restarting....")
+            print(datetime.datetime.now().isoformat(), "Chrome crashed. Restarting....")
             tf.reset_default_graph()
             for chrome, server in external_programs:
                 chrome.terminate()
