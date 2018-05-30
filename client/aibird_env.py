@@ -1,5 +1,6 @@
 """ An OpenAI environment interface for AIBird client """
-import time
+from time import sleep
+import subprocess
 
 import gym
 import numpy as np
@@ -44,10 +45,16 @@ class AIBirdEnv(gym.Env):
                       default value: map (-infty, infty) to action space via sigmoid
     """
 
-    def __init__(self, client_port, action_space, act_cont,
+    def __init__(self, action_space, act_cont,
                  process_state=lambda x: x, process_action=None):
-        self.aibird_client = aibird_client.AIBirdClient(port=client_port)
         self.observation_space = None
+        self.chrome = None
+        self.server = None
+        self.aibird_client = None
+        self.server_path = None
+        self.chrome_user = None
+        self.client_port = None
+        self.reset_count = 0
         if act_cont:
             self.action_space = gym.spaces.Box(
                 low=action_space[0], high=action_space[1], dtype=np.float64)
@@ -67,9 +74,14 @@ class AIBirdEnv(gym.Env):
         else:
             self._process_action = process_action
 
-    def startup(self):
+    def startup(self, server_path, chrome_user, client_port):
         """Setups the AIBird client. Must be called before anything else.
         """
+        self.chrome, self.server = prepare_env(server_path, chrome_user, client_port)
+        self.server_path = server_path
+        self.chrome_user = chrome_user
+        self.client_port = client_port
+        self.aibird_client = aibird_client.AIBirdClient(port=client_port)
         self.aibird_client.connect()
         screenshot = self._get_state()
         self.observation_space = gym.spaces.Box(
@@ -94,7 +106,7 @@ class AIBirdEnv(gym.Env):
             return observation, reward, False, dict()
         state = self.aibird_client.state
         while level_over and not state.isover():
-            time.sleep(0.1)
+            sleep(0.1)
             state = self.aibird_client.state
         if state.won():
             reward = self.aibird_client.current_score - score
@@ -115,6 +127,39 @@ class AIBirdEnv(gym.Env):
         """ Reset the game, i.e., load level 1.
         :returns: the screenshot of level 1
         """
+        self.reset_count += 1
+        if self.reset_count > 400:
+            # Regularly restarts the environment
+            self.restart()
+            self.reset_count = 0
         self.aibird_client.current_level = 1
         self.action_count = 0
         return self._get_state()
+
+    def terminate(self):
+        """ Terminate chrome and server. """
+        self.aibird_client.disconnect()
+        self.chrome.terminate()
+        self.server.terminate()
+
+    def restart(self):
+        """ Restart chrome and server. """
+        self.terminate()
+        self.chrome, self.server = prepare_env(self.server_path, self.chrome_user, self.client_port)
+        self.aibird_client = aibird_client.AIBirdClient(port=self.client_port)
+        self.aibird_client.connect()
+
+def prepare_env(server_path, chrome_user, client_port):
+    print('Preparing env', chrome_user, client_port)
+    with open('log/chrome{}.error'.format(chrome_user), 'a') as chrome_error:
+        chrome = subprocess.Popen(['google-chrome-stable', 'chrome.angrybirds.com',
+                                   '--profile-directory=Profile {}'.format(chrome_user)],
+                                  stderr=chrome_error)
+    sleep(10)
+    with open('log/server{}.log'.format(chrome_user), 'a') as server_log:
+        server = subprocess.Popen(["ant", "run", "-Dproxyport={}".format(8999 + chrome_user),
+                                   "-Dclientport={}".format(client_port)],
+                                  cwd=server_path, stdout=server_log)
+    sleep(10)
+    return chrome, server
+
