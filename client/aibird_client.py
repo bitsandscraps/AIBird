@@ -65,6 +65,10 @@ class AIBirdClient:
         self.socket.connect((self.host, self.port))
         self._load_level(self._current_level)
 
+    def disconnect(self):
+        """Disconnect from AIBird server."""
+        self.socket.close()
+
     @property
     def current_level(self):
         """ Return current level """
