@@ -46,13 +46,28 @@ def train(envs, num_env, num_timesteps, seed, load_path=None):
     config.gpu_options.allow_growth = True #pylint: disable=E1101
     with tf.Session(config=config) as _:
         env = VecFrameStack(make_aibird_env(envs, num_env, seed), 1)
-        ppo2.learn(policy=CnnPolicy, env=env, nsteps=256, nminibatches=8,
-                   lam=0.95, gamma=1, noptepochs=4, log_interval=1,
-                   ent_coef=.01,
-                   lr=lambda f: f * 2.5e-4,
-                   cliprange=lambda f: f * 0.1,
-                   total_timesteps=int(num_timesteps * 1.1),
-                   save_interval=1, load_path=load_path)
+        try:
+            ppo2.learn(policy=CnnPolicy, env=env, nsteps=256, nminibatches=8,
+                       lam=0.95, gamma=1, noptepochs=4, log_interval=1,
+                       ent_coef=.01,
+                       lr=lambda f: f * 2.5e-4,
+                       cliprange=lambda f: f * 0.1,
+                       total_timesteps=int(num_timesteps * 1.1),
+                       save_interval=1, load_path=load_path)
+        except timeout:
+            # Kill chrome and server
+            print(datetime.datetime.now().isoformat(), "Chrome crashed. Restarting....", flush=True)
+            tf.reset_default_graph()
+            env.close()
+            for e in envs:
+                e.terminate()
+            return True
+        except Exception as exception:
+            env.close()
+            for e in envs:
+                e.terminate()
+            raise exception
+        return False
 
 def process_screensot(img):
     """Crop away unnecessary parts(the score part)"""
@@ -106,28 +121,18 @@ def main(start_level=1):
     if os.path.isdir(checkdir):
         checkpoints = [os.path.join(checkdir, f) for f in os.listdir(checkdir)]
         load_path = max(checkpoints, key=os.path.getctime)
-    while True:
-        try:
-            # run chrome and AIBirdServer
-            env = []
-            for i in range(1, 5):
-                ienv = aibird_env.AIBirdEnv(
-                    action_space=60, act_cont=False,
-                    process_state=process_screensot, process_action=quantize, start_level=start_level)
-                ienv.startup(server_path=server_path, chrome_user=i, client_port=2000+i)
-                env.append(ienv)
-            # train
-            train(env, 4, int(1e6), 0, load_path)
-        except timeout:
-            # Kill chrome and server
-            print(datetime.datetime.now().isoformat(), "Chrome crashed. Restarting....")
-            tf.reset_default_graph()
-            for e in env:
-                e.terminate()
-        except Exception as exception:
-            for e in env:
-                e.terminate()
-            raise exception
+    done = True
+    while not done:
+        # run chrome and AIBirdServer
+        env = []
+        for i in range(1, 5):
+            ienv = aibird_env.AIBirdEnv(
+                action_space=60, act_cont=False,
+                process_state=process_screensot, process_action=quantize, start_level=start_level)
+            ienv.startup(server_path=server_path, chrome_user=i, client_port=2000+i)
+            env.append(ienv)
+        # train
+        done = train(env, 4, int(1e6), 0, load_path)
 
 if __name__ == "__main__":
     if len(sys.argv) == 1:
