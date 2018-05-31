@@ -31,7 +31,6 @@ def worker(remote, parent_remote, env_fn_wrapper):
             else:
                 raise NotImplementedError
     except timeout:
-        print('timeout')
         remote.send((FAILURE,))
         remote.close()
 

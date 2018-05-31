@@ -47,7 +47,7 @@ class AIBirdEnv(gym.Env):
     """
 
     def __init__(self, action_space, act_cont,
-                 process_state=lambda x: x, process_action=None):
+                 process_state=lambda x: x, process_action=None, start_level=1):
         self.observation_space = None
         self.chrome = None
         self.server = None
@@ -56,6 +56,7 @@ class AIBirdEnv(gym.Env):
         self.chrome_user = None
         self.client_port = None
         self.reset_count = 0
+        self.start_level = start_level
         if act_cont:
             self.action_space = gym.spaces.Box(
                 low=action_space[0], high=action_space[1], dtype=np.float64)
@@ -129,11 +130,11 @@ class AIBirdEnv(gym.Env):
         :returns: the screenshot of level 1
         """
         self.reset_count += 1
-        if self.reset_count > 100:
+        if self.reset_count > 50:
             # Regularly restarts the environment
             self.restart()
             self.reset_count = 0
-        self.aibird_client.current_level = 1
+        self.aibird_client.current_level = self.start_level
         self.action_count = 0
         return self._get_state()
 
