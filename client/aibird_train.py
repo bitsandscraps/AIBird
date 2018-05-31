@@ -138,4 +138,4 @@ if __name__ == "__main__":
     if len(sys.argv) == 1:
         main()
     else:
-        main(sys.argv[1])
+        main(int(sys.argv[1]))
