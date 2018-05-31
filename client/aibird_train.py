@@ -60,13 +60,13 @@ def train(envs, num_env, num_timesteps, seed, load_path=None):
             env.close()
             for e in envs:
                 e.terminate()
-            return True
+            return False
         except Exception as exception:
             env.close()
             for e in envs:
                 e.terminate()
             raise exception
-        return False
+        return True
 
 def process_screensot(img):
     """Crop away unnecessary parts(the score part)"""
