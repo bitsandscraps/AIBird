@@ -6,6 +6,7 @@ import subprocess
 import numpy as np
 from scipy.stats import logistic
 import gym
+import gym.spaces
 
 import aibird_client
 
