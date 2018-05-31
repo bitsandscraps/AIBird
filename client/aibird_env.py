@@ -132,33 +132,39 @@ class AIBirdEnv(gym.Env):
         """
         self.reset_count += 1
         if self.reset_count > 50:
-            # Regularly restarts the environment
-            self.restart()
+            # Regularly restarts the server
+            self.restart(True)
             self.reset_count = 0
         self.aibird_client.current_level = self.start_level
         self.action_count = 0
         return self._get_state()
 
-    def terminate(self):
+    def terminate(self, weak=False):
         """ Terminate chrome and server. """
         self.aibird_client.disconnect()
-        self.chrome.terminate()
+        sleep(1)
+        if not weak:
+            self.chrome.terminate()
         self.server.terminate()
 
-    def restart(self):
+    def restart(self, weak=False):
         """ Restart chrome and server. """
-        self.terminate()
+        self.terminate(weak)
         sleep(5)
-        self.chrome, self.server = prepare_env(self.server_path, self.chrome_user, self.client_port)
+        if weak:
+            self.server = prepare_env(self.server_path, self.chrome_user, self.client_port, prepare_chrome=False)[1]
+        else:
+            self.chrome, self.server = prepare_env(self.server_path, self.chrome_user, self.client_port)
         self.aibird_client = aibird_client.AIBirdClient(port=self.client_port)
         self.aibird_client.connect()
 
-def prepare_env(server_path, chrome_user, client_port):
-    print('Preparing env', chrome_user, client_port)
-    with open('log/chrome{}.error'.format(chrome_user), 'a') as chrome_error:
-        chrome = subprocess.Popen(['google-chrome-stable', 'chrome.angrybirds.com',
-                                   '--profile-directory=Profile {}'.format(chrome_user)],
-                                  stderr=chrome_error)
+def prepare_env(server_path, chrome_user, client_port, prepare_chrome=True):
+    chrome = None
+    if prepare_chrome:
+        with open('log/chrome{}.error'.format(chrome_user), 'a') as chrome_error:
+            chrome = subprocess.Popen(['google-chrome-stable', 'chrome.angrybirds.com',
+                                       '--profile-directory=Profile {}'.format(chrome_user)],
+                                      stdout=chrome_error, stderr=chrome_error)
     sleep(10)
     with open('log/server{}.log'.format(chrome_user), 'a') as server_log:
         server = subprocess.Popen(["ant", "run", "-Dproxyport={}".format(8999 + chrome_user),
