@@ -121,7 +121,7 @@ def main(start_level=1):
     if os.path.isdir(checkdir):
         checkpoints = [os.path.join(checkdir, f) for f in os.listdir(checkdir)]
         load_path = max(checkpoints, key=os.path.getctime)
-    done = True
+    done = False
     while not done:
         # run chrome and AIBirdServer
         env = []
