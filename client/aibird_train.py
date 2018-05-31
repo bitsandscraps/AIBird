@@ -37,7 +37,6 @@ def train(penv, num_timesteps, seed, load_path=None):
     set_global_seeds(seed)
     with tf.Session(config=config) as _:
         env = DummyVecEnv([make_env])
-        env = VecNormalize(env)
         ppo2.learn(policy=CnnPolicy, env=env, nsteps=1024, nminibatches=32,
                    lam=0.95, gamma=1, noptepochs=10, log_interval=1,
                    ent_coef=.01,

@@ -182,6 +182,7 @@ class AIBirdClient:
         """
         # level = self.current_level
         # fx, fy = FOCUS[level - 1]
+        print(theta, tap_time)
         for _ in range(MAXTRIALS):
             if self.zoom_out():
                 break
