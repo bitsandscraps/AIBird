@@ -94,7 +94,7 @@ def prepare_env(server_path, chrome_user, client_port):
     sleep(10)
     return chrome, server
 
-def main():
+def main(start_level=1):
     """ Train AIBird agent using PPO
     """
     logger.configure('aibird_log_multi')
@@ -113,7 +113,7 @@ def main():
             for i in range(1, 5):
                 ienv = aibird_env.AIBirdEnv(
                     action_space=60, act_cont=False,
-                    process_state=process_screensot, process_action=quantize)
+                    process_state=process_screensot, process_action=quantize, start_level=start_level)
                 ienv.startup(server_path=server_path, chrome_user=i, client_port=2000+i)
                 env.append(ienv)
             # train
@@ -130,4 +130,7 @@ def main():
             raise exception
 
 if __name__ == "__main__":
-    main()
+    if len(sys.argv) == 1:
+        main()
+    else:
+        main(sys.argv[1])
