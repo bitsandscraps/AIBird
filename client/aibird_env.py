@@ -1,10 +1,11 @@
 """ An OpenAI environment interface for AIBird client """
+    
 from time import sleep
 import subprocess
 
-import gym
 import numpy as np
 from scipy.stats import logistic
+import gym
 
 import aibird_client
 
@@ -128,7 +129,7 @@ class AIBirdEnv(gym.Env):
         :returns: the screenshot of level 1
         """
         self.reset_count += 1
-        if self.reset_count > 400:
+        if self.reset_count > 100:
             # Regularly restarts the environment
             self.restart()
             self.reset_count = 0
@@ -145,6 +146,7 @@ class AIBirdEnv(gym.Env):
     def restart(self):
         """ Restart chrome and server. """
         self.terminate()
+        sleep(5)
         self.chrome, self.server = prepare_env(self.server_path, self.chrome_user, self.client_port)
         self.aibird_client = aibird_client.AIBirdClient(port=self.client_port)
         self.aibird_client.connect()

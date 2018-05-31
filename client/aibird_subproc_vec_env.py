@@ -6,7 +6,6 @@ from baselines.common.vec_env import VecEnv, CloudpickleWrapper
 SUCCESS = 0
 FAILURE = -1
 
-
 def worker(remote, parent_remote, env_fn_wrapper):
     parent_remote.close()
     env = env_fn_wrapper.x()
@@ -32,6 +31,7 @@ def worker(remote, parent_remote, env_fn_wrapper):
             else:
                 raise NotImplementedError
     except timeout:
+        print('timeout')
         remote.send((FAILURE,))
         remote.close()
 
