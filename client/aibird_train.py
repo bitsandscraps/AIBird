@@ -57,7 +57,6 @@ def train(envs, num_env, num_timesteps, seed, load_path=None):
         except timeout:
             # Kill chrome and server
             print(datetime.datetime.now().isoformat(), "Chrome crashed. Restarting....", flush=True)
-            tf.reset_default_graph()
             env.close()
             for e in envs:
                 e.terminate()
@@ -133,6 +132,7 @@ def main(start_level=1):
             env.append(ienv)
         # train
         done = train(env, 4, int(1e6), 0, load_path)
+        tf.reset_default_graph()
 
 if __name__ == "__main__":
     if len(sys.argv) == 1:
