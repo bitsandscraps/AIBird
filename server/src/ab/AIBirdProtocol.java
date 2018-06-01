@@ -124,6 +124,7 @@ public class AIBirdProtocol {
                         String subimgHash = VisionUtils.imageDigest(subimage);
                         if (subimgHash.equals(eagleHash)) {
                                 aRobot.resumeEagle();
+                                ActionRobot.fullyZoomOut();
                         } else {
                                 checkedNotEagle = true;
                         }
