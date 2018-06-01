@@ -200,22 +200,16 @@ public class AIBirdProtocol {
                 int dy = Math.toIntExact(Math.round(r * Math.sin(theta)));
                 Point sling = findSling();
                 while (sling.x == -1) {
-                        if (sling == null) {
-                                BufferedImage screenshot = ActionRobot.doScreenShot();
-                                try {
-                                        File outputfile = File.createTempFile("sling-", ".png");
-                                        ImageIO.write(screenshot, "png", outputfile);
-                                        System.out.println(outputfile.getName());
-                                } catch(IOException e){
-                                        e.printStackTrace();
-                                }
-                        }
                         aRobot.resume();
                         sling = findSling();
                 }
+                System.out.println("cand1");
                 Shot shot = new Shot(sling.x, sling.y, dx, dy, 0, tap_time);
+                System.out.println("cand2");
                 aRobot.cFastshoot(shot);
+                System.out.println("cand3");
                 if (!isSafe) return writeInt(1);
+                System.out.println("cand4");
                 try {
                         scoreCheck();
                 } finally {
