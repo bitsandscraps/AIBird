@@ -54,7 +54,7 @@ public class StateUtil {
 	    catch (IOException e) {
 	           e.printStackTrace();
 	        }
-	    
+        if (image == null) System.out.println("Can not receive screenshot.");
         GameStateExtractor gameStateExtractor = new GameStateExtractor();
         GameState state = gameStateExtractor.getGameState(image);
         if (state == GameState.PLAYING) {
@@ -65,7 +65,8 @@ public class StateUtil {
         		score = gameStateExtractor.getScoreEndGame(image);
        if(score == -1)
                try {
-                       File errorimg = new File("error.png");
+                       System.out.println("Saving screenshot");
+                       File errorimg = File.createTempFile("aibird-", ".png");
                        ImageIO.write(image, "png", errorimg);
                } catch(IOException e){
                        e.printStackTrace();
