@@ -63,7 +63,7 @@ public class StateUtil {
         } else
         	if(state == GameState.WON)
         		score = gameStateExtractor.getScoreEndGame(image);
-       if(score == -1)
+       if(score == -1) {
                try {
                        System.out.println("Saving screenshot");
                        File errorimg = File.createTempFile("aibird-", ".png");
@@ -72,6 +72,7 @@ public class StateUtil {
                        e.printStackTrace();
                }
     	   System.out.println(" Game score is unavailable "); 	   
+       }
 		return score;
 	}
 	/**
