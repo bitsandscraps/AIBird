@@ -163,6 +163,13 @@ public class AIBirdProtocol {
                 Vision vision = getVision();
                 Rectangle sling = vision.findSling();
                 if (sling == null) {
+                        BufferedImage screenshot = ActionRobot.doScreenShot();
+                        try {
+                                File outputfile = new File("error.png");
+                                ImageIO.write(screenshot, "png", outputfile);
+                        } catch(IOException e){
+                                e.printStackTrace();
+                        }
                         return new Point(-1, -1);
                 }
                 return getReferencePoint(sling);
