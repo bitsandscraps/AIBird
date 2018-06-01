@@ -29,7 +29,6 @@ import ab.utils.StateUtil;
 import ab.vision.ABObject;
 import ab.vision.ABType;
 import ab.vision.GameStateExtractor.GameState;
-import ab.vision.VisionUtils;
 import ab.vision.Vision;
 
 /**
@@ -42,7 +41,6 @@ public class ActionRobot {
 	public int current_score = 0;
 	private LoadLevelSchema lls;
 	private RestartLevelSchema rls;
-        public final String eagleHash;
 	static {
 		if (proxy == null) {
 			try {
@@ -83,13 +81,6 @@ public class ActionRobot {
 	public ActionRobot() {
 		lls = new LoadLevelSchema(proxy);
 		rls = new RestartLevelSchema(proxy);
-                BufferedImage eagle = null;
-                try {
-                        eagle = ImageIO.read(getClass().getResource("eagle.png"));
-                } catch(IOException e){
-                        e.printStackTrace();
-                }
-                eagleHash = VisionUtils.imageDigest(eagle);
 	}
 
 	public void restartLevel() {

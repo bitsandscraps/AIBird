@@ -14,6 +14,7 @@ import ab.utils.StateUtil;
 import ab.vision.ABObject;
 import ab.vision.GameStateExtractor.GameState;
 import ab.vision.Vision;
+import ab.vision.VisionUtils;
 
 public class AIBirdProtocol {
         private final byte DOSCREENSHOT = 11;
@@ -31,6 +32,7 @@ public class AIBirdProtocol {
         private final double X_OFFSET = 0.5;
         private final double Y_OFFSET = 0.65;
         private int score = 0;
+        private final String eagleHash;
 
         private ActionRobot aRobot;
         // private int curLevel = 1;
@@ -38,6 +40,13 @@ public class AIBirdProtocol {
         AIBirdProtocol() {
                 aRobot = new ActionRobot();
                 ActionRobot.GoFromMainMenuToLevelSelection();
+                BufferedImage eagle = null;
+                try {
+                        eagle = ImageIO.read(getClass().getResource("eagle.png"));
+                } catch(IOException e){
+                        e.printStackTrace();
+                }
+                eagleHash = VisionUtils.imageDigest(eagle);
         }
 
         public int numberOfIntsToReadMore(byte mid) {
@@ -107,7 +116,18 @@ public class AIBirdProtocol {
         }
 
         private byte[] doScreenShot() throws IOException {
-                BufferedImage screenshot = ActionRobot.doScreenShot();
+                BufferedImage screenshot = null;
+                boolean checkedNotEagle = false;
+                while (!checkedNotEagle) {
+                        screenshot = ActionRobot.doScreenShot();
+                        BufferedImage subimage = screenshot.getSubimage(236, 333, 30, 30);
+                        String subimgHash = VisionUtils.imageDigest(subimage);
+                        if (subimgHash.equals(eagleHash)) {
+                                aRobot.resumeEagle();
+                        } else {
+                                checkedNotEagle = true;
+                        }
+                }
                 ByteArrayOutputStream bos = new ByteArrayOutputStream();
                 DataOutputStream dos = new DataOutputStream(bos);
                 ByteArrayOutputStream ibos = new ByteArrayOutputStream();
@@ -161,10 +181,6 @@ public class AIBirdProtocol {
 
         private Point findSling() {
                 Vision vision = getVision();
-                while (vision.findEagle(aRobot.eagleHash)) {
-                        aRobot.resumeEagle();
-                        vision = getVision();
-                }
                 Rectangle sling = vision.findSling();
                 return getReferencePoint(sling);
         }
