@@ -179,6 +179,7 @@ public class AIBirdProtocol {
                         try {
                                 File outputfile = File.createTempFile("sling-", ".png");
                                 ImageIO.write(screenshot, "png", outputfile);
+                                System.out.println(outputfile.getName());
                         } catch(IOException e){
                                 e.printStackTrace();
                         }
