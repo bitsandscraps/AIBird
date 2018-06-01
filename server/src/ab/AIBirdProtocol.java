@@ -177,7 +177,7 @@ public class AIBirdProtocol {
                 if (sling == null) {
                         BufferedImage screenshot = ActionRobot.doScreenShot();
                         try {
-                                File outputfile = new File("error.png");
+                                File outputfile = File.createTempFile("sling-", ".png");
                                 ImageIO.write(screenshot, "png", outputfile);
                         } catch(IOException e){
                                 e.printStackTrace();
