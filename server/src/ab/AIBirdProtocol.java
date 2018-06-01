@@ -203,13 +203,9 @@ public class AIBirdProtocol {
                         aRobot.resume();
                         sling = findSling();
                 }
-                System.out.println("cand1");
                 Shot shot = new Shot(sling.x, sling.y, dx, dy, 0, tap_time);
-                System.out.println("cand2");
                 aRobot.cFastshoot(shot);
-                System.out.println("cand3");
                 if (!isSafe) return writeInt(1);
-                System.out.println("cand4");
                 try {
                         scoreCheck();
                 } finally {
@@ -273,6 +269,13 @@ public class AIBirdProtocol {
                         while (state != GameState.WON) {
                                 TimeUnit.MILLISECONDS.sleep(300);
                                 state = aRobot.getState();
+                                BufferedImage image = ActionRobot.doScreenShot();
+                                try {
+                                        File ss = File.createTempFile("sling-", ".png");
+                                        ImageIO.write(image, "png", ss);
+                                } catch(IOException e){
+                                        e.printStackTrace();
+                                }
                         }
                         score = StateUtil.getScore(ActionRobot.proxy);
                 }
