@@ -63,6 +63,12 @@ public class StateUtil {
         	if(state == GameState.WON)
         		score = gameStateExtractor.getScoreEndGame(image);
        if(score == -1)
+               try {
+                       File errorimg = new File("error.png");
+                       ImageIO.write(image, "png", errorimg);
+               } catch(IOException e){
+                       e.printStackTrace();
+               }
     	   System.out.println(" Game score is unavailable "); 	   
 		return score;
 	}
