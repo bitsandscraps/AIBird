@@ -133,4 +133,10 @@ public class Vision {
 			visionMBR = new VisionMBR(image);
 		return visionMBR;
 	}
+
+        public boolean findEagle(String eagleHash)
+        {
+                String hash = VisionUtils.imageDigest(image.getSubimage(236, 333, 30, 30));
+                return eagleHash.equals(hash);
+        }
 }

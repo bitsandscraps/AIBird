@@ -173,6 +173,10 @@ public class AIBirdProtocol {
 
         private Point findSling() {
                 Vision vision = getVision();
+                while (vision.findEagle(aRobot.eagleHash)) {
+                        aRobot.resumeEagle();
+                        vision = getVision();
+                }
                 Rectangle sling = vision.findSling();
                 return getReferencePoint(sling);
         }
