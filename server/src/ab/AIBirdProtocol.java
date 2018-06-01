@@ -70,28 +70,40 @@ public class AIBirdProtocol {
         public byte[] processInput(byte mid, int[] theInput) throws IOException {
                 switch (mid) {
                         case DOSCREENSHOT:
+                                System.out.println("Screenshot");
                                 return doScreenShot();
                         case STATE:
+                                System.out.println("State");
                                 return state();
                         case MYSCORE:
+                                System.out.println("Score");
                                 return myScore();
                         case FULLZOOMOUT:
+                                System.out.println("Zoomout");
                                 return fullZoomOut();
                         case FULLZOOMIN:
+                                System.out.println("Zoomin");
                                 return fullZoomIn();
                         case RESTARTLEVEL:
+                                System.out.println("Restart");
                                 return restartLevel();
                         case LOADLEVEL:
+                                System.out.println("Loadlevel");
                                 return loadLevel(theInput[0]);
                         case CARTSHOOTSAFE:
+                                System.out.println("Cartshootsaf");
                                 return cartShoot(true, theInput[0], theInput[1], theInput[2]);
                         case CARTSHOOTFAST:
+                                System.out.println("Cartshootfst");
                                 return cartShoot(false, theInput[0], theInput[1], theInput[2]);
                         case POLARSHOOTSAFE:
+                                System.out.println("Partshootsafe");
                                 return polarShoot(true, theInput[0], theInput[1], theInput[2]);
                         case POLARSHOOTFAST:
+                                System.out.println("Partshootfst");
                                 return polarShoot(false, theInput[0], theInput[1], theInput[2]);
                         case ISLEVELOVER:
+                                System.out.println("Isover");
                                 return isLevelOver();
                         default:
                                 assert false: "Unknown MID: " + mid + ")";
