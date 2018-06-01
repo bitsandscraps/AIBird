@@ -167,7 +167,7 @@ def prepare_env(server_path, chrome_user, client_port, prepare_chrome=True):
                                       stdout=chrome_error, stderr=chrome_error)
     sleep(10)
     with open('log/server{}.log'.format(chrome_user), 'a') as server_log:
-        server = subprocess.Popen(["ant", "run", "-Dproxyport={}".format(8999 + chrome_user),
+        server = subprocess.Popen(["ant", "-Dproxyport={}".format(8999 + chrome_user),
                                    "-Dclientport={}".format(client_port)],
                                   cwd=server_path, stdout=server_log)
     sleep(10)
