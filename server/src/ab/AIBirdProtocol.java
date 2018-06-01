@@ -174,17 +174,6 @@ public class AIBirdProtocol {
         private Point findSling() {
                 Vision vision = getVision();
                 Rectangle sling = vision.findSling();
-                if (sling == null) {
-                        BufferedImage screenshot = ActionRobot.doScreenShot();
-                        try {
-                                File outputfile = File.createTempFile("sling-", ".png");
-                                ImageIO.write(screenshot, "png", outputfile);
-                                System.out.println(outputfile.getName());
-                        } catch(IOException e){
-                                e.printStackTrace();
-                        }
-                        return new Point(-1, -1);
-                }
                 return getReferencePoint(sling);
         }
 
@@ -211,6 +200,16 @@ public class AIBirdProtocol {
                 int dy = Math.toIntExact(Math.round(r * Math.sin(theta)));
                 Point sling = findSling();
                 while (sling.x == -1) {
+                        if (sling == null) {
+                                BufferedImage screenshot = ActionRobot.doScreenShot();
+                                try {
+                                        File outputfile = File.createTempFile("sling-", ".png");
+                                        ImageIO.write(screenshot, "png", outputfile);
+                                        System.out.println(outputfile.getName());
+                                } catch(IOException e){
+                                        e.printStackTrace();
+                                }
+                        }
                         aRobot.resume();
                         sling = findSling();
                 }
