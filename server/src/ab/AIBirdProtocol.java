@@ -261,13 +261,13 @@ public class AIBirdProtocol {
                         while (state != GameState.WON) {
                                 TimeUnit.MILLISECONDS.sleep(300);
                                 state = aRobot.getState();
-                                BufferedImage image = ActionRobot.doScreenShot();
-                                try {
-                                        File ss = File.createTempFile("sling-", ".png");
-                                        ImageIO.write(image, "png", ss);
-                                } catch(IOException e){
-                                        e.printStackTrace();
-                                }
+//                              BufferedImage image = ActionRobot.doScreenShot();
+//                              try {
+//                                      File ss = File.createTempFile("sling-", ".png");
+//                                      ImageIO.write(image, "png", ss);
+//                              } catch(IOException e){
+//                                      e.printStackTrace();
+//                              }
                         }
                         score = StateUtil.getScore(ActionRobot.proxy);
                 }
