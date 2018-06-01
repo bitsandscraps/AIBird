@@ -4,6 +4,7 @@ import multiprocessing
 import os
 import sys
 import subprocess
+import psutil
 from socket import timeout
 from time import sleep
 
@@ -83,30 +84,28 @@ def quantize(act):
     tap = ttap * MAX_ACTION[1] + (1 - ttap) * MIN_ACTION[1]
     return angle, tap
 
-# def killserver():
-#     """ Kill AIBirdServer """
-#     print('killserver')
-#     output = subprocess.run("jps", stdout=subprocess.PIPE).stdout
-#     for line in ''.join(map(chr, output)).rstrip('\n').split('\n'):
-#         if len(line) == 2:
-#             pid, name = line.split()
-#             if name == 'AIBirdServer':
-#                 psutil.Process(int(pid)).terminate()
-#     subprocess.run("jps")
+def killserver():
+    """ Kill AIBirdServer """
+    output = subprocess.run("jps", stdout=subprocess.PIPE).stdout
+    for line in ''.join(map(chr, output)).rstrip('\n').split('\n'):
+        if len(line) == 2:
+            pid, name = line.split()
+            if name == 'AIBirdServer':
+                psutil.Process(int(pid)).terminate()
 
-def prepare_env(server_path, chrome_user, client_port):
-    print('Preparing env', chrome_user, client_port)
-    with open('log/chrome{}.error'.format(chrome_user), 'a') as chrome_error:
-        chrome = subprocess.Popen(['google-chrome-stable', 'chrome.angrybirds.com',
-                                   '--profile-directory=Profile {}'.format(chrome_user)],
-                                  stderr=chrome_error)
-    sleep(10)
-    with open('log/server{}.log'.format(chrome_user), 'a') as server_log:
-        server = subprocess.Popen(["ant", "run", "-Dproxyport={}".format(8999 + chrome_user),
-                                   "-Dclientport={}".format(client_port)],
-                                  cwd=server_path, stdout=server_log)
-    sleep(10)
-    return chrome, server
+# def prepare_env(server_path, chrome_user, client_port):
+#     print('Preparing env', chrome_user, client_port)
+#     with open('log/chrome{}.error'.format(chrome_user), 'a') as chrome_error:
+#         chrome = subprocess.Popen(['google-chrome-stable', 'chrome.angrybirds.com',
+#                                    '--profile-directory=Profile {}'.format(chrome_user)],
+#                                   stderr=chrome_error)
+#     sleep(10)
+#     with open('log/server{}.log'.format(chrome_user), 'a') as server_log:
+#         server = subprocess.Popen(["ant", "run", "-Dproxyport={}".format(8999 + chrome_user),
+#                                    "-Dclientport={}".format(client_port)],
+#                                   cwd=server_path, stdout=server_log)
+#     sleep(10)
+#     return chrome, server
 
 def main(start_level=1):
     """ Train AIBird agent using PPO
@@ -133,6 +132,7 @@ def main(start_level=1):
         # train
         done = train(env, 4, int(1e6), 0, load_path)
         tf.reset_default_graph()
+        killserver()    # Explicitly check if server is running once more
 
 if __name__ == "__main__":
     if len(sys.argv) == 1:
