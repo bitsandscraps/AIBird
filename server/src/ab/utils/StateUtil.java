@@ -54,7 +54,6 @@ public class StateUtil {
 	    catch (IOException e) {
 	           e.printStackTrace();
 	        }
-        if (image == null) System.out.println("Can not receive screenshot.");
         GameStateExtractor gameStateExtractor = new GameStateExtractor();
         GameState state = gameStateExtractor.getGameState(image);
         if (state == GameState.PLAYING) {
