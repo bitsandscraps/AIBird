@@ -29,6 +29,7 @@ public class AIBirdProtocol {
         private final byte LOADLEVEL = 51;
         private final byte RESTARTLEVEL = 52;
         private final byte ISLEVELOVER = 60;
+        private final byte CLOSE = 66;
         private final double X_OFFSET = 0.5;
         private final double Y_OFFSET = 0.65;
         private int score = 0;
@@ -59,6 +60,7 @@ public class AIBirdProtocol {
                         case FULLZOOMIN:
                         case RESTARTLEVEL:
                         case ISLEVELOVER:
+                        case CLOSE:
                                 result = 0;
                                 break;
                         case LOADLEVEL:
@@ -102,9 +104,12 @@ public class AIBirdProtocol {
                                 return polarShoot(false, theInput[0], theInput[1], theInput[2]);
                         case ISLEVELOVER:
                                 return isLevelOver();
+                        case CLOSE:
+                                aRobot.close();
+                                return writeInt(1);
                         default:
                                 assert false: "Unknown MID: " + mid + ")";
-                                return new byte[1];             // Never Used
+                                return null;             // Never Used
                 }
         }
 

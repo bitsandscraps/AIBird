@@ -26,6 +26,7 @@ MID_CLICK_IN_CENTER = 36
 MID_LOAD_LEVEL = 51
 MID_RESTART_LEVEL = 52
 MID_IS_LEVEL_OVER = 60
+MID_CLOSE = 66
 
 # Length of response messages
 LEN_SCREENSHOT = 4              # Size
@@ -179,6 +180,10 @@ def zoom_out():
 def zoom_in():
     """Formulate a zoom in request message"""
     return struct.pack('!b', MID_FULL_ZOOM_IN)
+
+def close():
+    """Formulate a close request message"""
+    return struct.pack('!b', MID_CLOSE)
 
 def click_in_center():
     """Formulate a click in center request message"""
