@@ -1,6 +1,7 @@
 """ An OpenAI environment interface for AIBird client """
-    
+
 from time import sleep
+from socket import timeout
 import subprocess
 
 import numpy as np
@@ -143,9 +144,9 @@ class AIBirdEnv(gym.Env):
         """ Terminate chrome and server. """
         self.aibird_client.disconnect()
         sleep(1)
+        safe_terminate(self.server)
         if not weak:
-            self.chrome.terminate()
-        self.server.terminate()
+            safe_terminate(self.chrome)
 
     def restart(self, weak=False):
         """ Restart chrome and server. """
@@ -161,10 +162,11 @@ class AIBirdEnv(gym.Env):
 def prepare_env(server_path, chrome_user, client_port, prepare_chrome=True):
     chrome = None
     if prepare_chrome:
-        with open('log/chrome{}.error'.format(chrome_user), 'a') as chrome_error:
+        with open('log/chrome{}.log'.format(chrome_user), 'a') as chrome_log:
             chrome = subprocess.Popen(['google-chrome-stable', 'chrome.angrybirds.com',
-                                       '--profile-directory=Profile {}'.format(chrome_user)],
-                                      stdout=chrome_error, stderr=chrome_error)
+                                       '--profile-directory=Profile {}'.format(chrome_user),
+                                       '--enable-logging', '--v=1'],
+                                      stdout=chrome_log, stderr=chrome_log)
     sleep(10)
     with open('log/server{}.log'.format(chrome_user), 'a') as server_log:
         server = subprocess.Popen(["ant", "-Dproxyport={}".format(8999 + chrome_user),
@@ -173,3 +175,9 @@ def prepare_env(server_path, chrome_user, client_port, prepare_chrome=True):
     sleep(10)
     return chrome, server
 
+def safe_terminate(process):
+    """ Check whether a process has terminated if not send SIGTERM again. """
+    process.terminate()
+    while process.poll() is None:
+        sleep(0.5)
+        process.terminate()

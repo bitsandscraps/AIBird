@@ -200,6 +200,10 @@ class AIBirdClient:
         """
         return self._send_and_recv_result(aibird_message.zoom_in())
 
+    def close(self):
+        """ Send close request. """
+        return self._send_and_recv_result(aibird_message.close())
+
     def zoom_out(self):
         """Send zoom out request.
         Return True if succeeded, False otherwise.

@@ -4,10 +4,9 @@ import multiprocessing
 import os
 import sys
 import subprocess
-import psutil
 from socket import timeout
-from time import sleep
 
+import psutil
 import tensorflow as tf
 
 # from skimage.color import rgb2grey
@@ -122,15 +121,20 @@ def main(start_level=1):
     done = False
     while not done:
         # run chrome and AIBirdServer
-        env = []
-        for i in range(1, 5):
-            ienv = aibird_env.AIBirdEnv(
-                action_space=60, act_cont=False,
-                process_state=process_screensot, process_action=quantize, start_level=start_level)
-            ienv.startup(server_path=server_path, chrome_user=i, client_port=2000+i)
-            env.append(ienv)
+        envs = []
+        try:
+            for i in range(1, 5):
+                ienv = aibird_env.AIBirdEnv(
+                    action_space=60, act_cont=False,
+                    process_state=process_screensot, process_action=quantize, start_level=start_level)
+                ienv.startup(server_path=server_path, chrome_user=i, client_port=2000+i)
+                envs.append(ienv)
+        except timeout as e:
+            for env in envs:
+                env.terminate()
+            raise e
         # train
-        done = train(env, 4, int(1e6), 0, load_path)
+        done = train(envs, 4, int(1e6), 0, load_path)
         tf.reset_default_graph()
         killserver()    # Explicitly check if server is running once more
 

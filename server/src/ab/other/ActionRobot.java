@@ -25,6 +25,7 @@ import ab.server.proxy.message.ProxyClickMessage;
 import ab.server.proxy.message.ProxyDragMessage;
 import ab.server.proxy.message.ProxyMouseWheelMessage;
 import ab.server.proxy.message.ProxyScreenshotMessage;
+import ab.server.proxy.message.ProxyCloseMessage;
 import ab.utils.StateUtil;
 import ab.vision.ABObject;
 import ab.vision.ABType;
@@ -230,6 +231,10 @@ public class ActionRobot {
 
 		return image;
 	}
+
+        public void close() {
+                proxy.send(new ProxyCloseMessage());
+        }
 	/*
 	 * @return the type of the bird on the sling.
 	 * 
