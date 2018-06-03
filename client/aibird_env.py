@@ -165,7 +165,7 @@ def prepare_env(server_path, chrome_user, client_port, prepare_chrome=True):
         with open('log/chrome{}.log'.format(chrome_user), 'a') as chrome_log:
             chrome = subprocess.Popen(['google-chrome-stable', 'chrome.angrybirds.com',
                                        '--profile-directory=Profile {}'.format(chrome_user),
-                                       '--enable-logging', '--v=1'],
+                                       '--enable-logging=stdout'],
                                       stdout=chrome_log, stderr=chrome_log)
     sleep(10)
     with open('log/server{}.log'.format(chrome_user), 'a') as server_log:
