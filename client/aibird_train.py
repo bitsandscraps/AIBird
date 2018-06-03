@@ -23,7 +23,6 @@ MIN_ACTION = [-10, 0.1]
 def train(penv, num_timesteps, seed, load_path=None):
     """ Slight modification of train method in baselines.ppo2.run_mujoco """
     from baselines.common.vec_env.dummy_vec_env import DummyVecEnv
-    from baselines.common.vec_env.vec_normalize import VecNormalize
     ncpu = multiprocessing.cpu_count()
     if sys.platform == 'darwin':
         ncpu //= 2
