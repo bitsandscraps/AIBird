@@ -32,6 +32,7 @@ public class AIBirdProtocol {
         private final byte CLOSE = 66;
         private final double X_OFFSET = 0.5;
         private final double Y_OFFSET = 0.65;
+        private final boolean DEBUG = true;
         private int score = 0;
         private final String eagleHash;
 
@@ -81,28 +82,40 @@ public class AIBirdProtocol {
         public byte[] processInput(byte mid, int[] theInput) throws IOException {
                 switch (mid) {
                         case DOSCREENSHOT:
+                                if(DEBUG) System.out.println("screenshot");
                                 return doScreenShot();
                         case STATE:
+                                if(DEBUG) System.out.println("state");
                                 return state();
                         case MYSCORE:
+                                if(DEBUG) System.out.println("score");
                                 return myScore();
                         case FULLZOOMOUT:
+                                if(DEBUG) System.out.println("zo");
                                 return fullZoomOut();
                         case FULLZOOMIN:
+                                if(DEBUG) System.out.println("zi");
                                 return fullZoomIn();
                         case RESTARTLEVEL:
+                                if(DEBUG) System.out.println("retart");
                                 return restartLevel();
                         case LOADLEVEL:
+                                if(DEBUG) System.out.println("load");
                                 return loadLevel(theInput[0]);
                         case CARTSHOOTSAFE:
+                                if(DEBUG) System.out.println("cartsafe");
                                 return cartShoot(true, theInput[0], theInput[1], theInput[2]);
                         case CARTSHOOTFAST:
+                                if(DEBUG) System.out.println("cartfast");
                                 return cartShoot(false, theInput[0], theInput[1], theInput[2]);
                         case POLARSHOOTSAFE:
+                                if(DEBUG) System.out.println("polarsafe");
                                 return polarShoot(true, theInput[0], theInput[1], theInput[2]);
                         case POLARSHOOTFAST:
+                                if(DEBUG) System.out.println("polarfast");
                                 return polarShoot(false, theInput[0], theInput[1], theInput[2]);
                         case ISLEVELOVER:
+                                if(DEBUG) System.out.println("levelover");
                                 return isLevelOver();
                         case CLOSE:
                                 aRobot.close();

@@ -1,13 +1,13 @@
 """ An OpenAI environment interface for AIBird client """
 
 from time import sleep
-from socket import timeout
 import subprocess
 
 import numpy as np
 from scipy.stats import logistic
 import gym
 import gym.spaces
+import psutil
 
 import aibird_client
 
@@ -163,22 +163,28 @@ def prepare_env(server_path, chrome_user, client_port, prepare_chrome=True):
     chrome = None
     if prepare_chrome:
         with open('log/chrome{}.log'.format(chrome_user), 'a') as chrome_log:
-            chrome = subprocess.Popen(['google-chrome-stable', 'chrome.angrybirds.com',
-                                       '--profile-directory=Profile {}'.format(chrome_user),
-                                       '--enable-logging', '--v=1'],
-                                      stdout=chrome_log, stderr=chrome_log)
+            chrome = psutil.Popen(['google-chrome-stable', 'chrome.angrybirds.com',
+                                   '--profile-directory=Profile {}'.format(chrome_user),
+                                   '--enable-logging=stdout'],
+                                  stdout=chrome_log, stderr=chrome_log)
     sleep(10)
     with open('log/server{}.log'.format(chrome_user), 'a') as server_log:
-        server = subprocess.Popen(["ant", "-Dproxyport={}".format(8999 + chrome_user),
-                                   "-Dclientport={}".format(client_port)],
-                                  cwd=server_path, stdout=server_log)
+        server = psutil.Popen(["ant", "-Dproxyport={}".format(8999 + chrome_user),
+                               "-Dclientport={}".format(client_port)],
+                              cwd=server_path, stdout=server_log)
     sleep(10)
     return chrome, server
 
-def safe_terminate(process):
-    """ Check whether a process has terminated if not send SIGTERM again. """
-    process.terminate()
-    while process.poll() is None:
-        sleep(0.5)
-        process.terminate()
-    sleep(1)
+def safe_terminate(proc):
+    """ Check whether a process has terminated if not send SIGTERM again.
+
+    proc: a psutil.Process object
+    """
+    procs = proc.children(recursive=True)
+    procs.append(proc)
+    for p in procs:
+        p.terminate()
+    _, alive = psutil.wait_procs(procs, timeout=3)
+    for p in alive:
+        p.kill()
+

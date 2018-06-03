@@ -12,6 +12,7 @@ screenshot/
 client/aibird_log
 client/aibird_log_discrete
 client/aibird_log_multi
+client/aibird_log_1to6
 server/*.png
 
 # C extensions
