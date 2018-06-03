@@ -201,6 +201,7 @@ public class AIBirdProtocol {
         private Point findSling() {
                 Vision vision = getVision();
                 Rectangle sling = vision.findSling();
+                if (sling == null) return new Point(-1, -1);
                 return getReferencePoint(sling);
         }
 
