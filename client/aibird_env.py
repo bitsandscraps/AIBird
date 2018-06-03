@@ -1,9 +1,9 @@
 """ An OpenAI environment interface for AIBird client """
 from time import sleep
-import subprocess
 
 import gym
 import numpy as np
+import psutil
 from scipy.stats import logistic
 
 import aibird_client
@@ -139,8 +139,8 @@ class AIBirdEnv(gym.Env):
     def terminate(self):
         """ Terminate chrome and server. """
         self.aibird_client.disconnect()
-        self.chrome.terminate()
-        self.server.terminate()
+        safe_terminate(self.chrome)
+        safe_terminate(self.server)
 
     def restart(self):
         """ Restart chrome and server. """
@@ -152,14 +152,26 @@ class AIBirdEnv(gym.Env):
 def prepare_env(server_path, chrome_user, client_port):
     print('Preparing env', chrome_user, client_port)
     with open('log/chrome{}.error'.format(chrome_user), 'a') as chrome_error:
-        chrome = subprocess.Popen(['google-chrome-stable', 'chrome.angrybirds.com',
-                                   '--profile-directory=Profile {}'.format(chrome_user)],
-                                  stderr=chrome_error)
+        chrome = psutil.Popen(['google-chrome-stable', 'chrome.angrybirds.com',
+                               '--profile-directory=Profile {}'.format(chrome_user)],
+                              stderr=chrome_error)
     sleep(10)
     with open('log/server{}.log'.format(chrome_user), 'a') as server_log:
-        server = subprocess.Popen(["ant", "run", "-Dproxyport={}".format(8999 + chrome_user),
-                                   "-Dclientport={}".format(client_port)],
-                                  cwd=server_path, stdout=server_log)
+        server = psutil.Popen(["ant", "run", "-Dproxyport={}".format(8999 + chrome_user),
+                               "-Dclientport={}".format(client_port)],
+                              cwd=server_path, stdout=server_log)
     sleep(10)
     return chrome, server
 
+def safe_terminate(proc):
+    """ Send SIGTERM to the process and its child processes. If it does not terminates, kill it.
+
+    proc: a psutil Process object
+    """
+    procs = proc.children(recursive=True)
+    procs.append(proc)
+    for p in procs:
+        p.terminate()
+    _, alive = psutil.wait_procs(procs, timeout=3)
+    for p in alive:
+        p.kill()
