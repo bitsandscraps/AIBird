@@ -181,3 +181,4 @@ def safe_terminate(process):
     while process.poll() is None:
         sleep(0.5)
         process.terminate()
+    sleep(1)
