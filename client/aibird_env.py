@@ -160,10 +160,15 @@ def prepare_env(server_path, chrome_user, client_port):
                               stderr=chrome_error)
     sleep(10)
     with open('log/server{}.log'.format(chrome_user), 'a') as server_log:
-        server = psutil.Popen(["ant", "run", "-Dproxyport={}".format(8999 + chrome_user),
-                               "-Dclientport={}".format(client_port)],
-                              cwd=server_path, stdout=server_log)
-    sleep(10)
+        while True:
+            server = psutil.Popen(["ant", "-Dproxyport={}".format(8999 + chrome_user),
+                                   "-Dclientport={}".format(client_port)],
+                                  cwd=server_path, stdout=server_log)
+            gone, _ = psutil.wait_procs([server], timeout=3)
+            if not gone:
+                break
+        
+    sleep(7)
     return chrome, server
 
 def safe_terminate(proc):

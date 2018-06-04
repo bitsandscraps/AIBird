@@ -2,11 +2,11 @@
 import datetime
 import multiprocessing
 import os
+import subprocess
 import sys
 from socket import timeout
-import subprocess
-import psutil
 
+import psutil
 import tensorflow as tf
 
 # from skimage.color import rgb2grey
@@ -69,9 +69,10 @@ def killserver():
         splitted = line.split()
         if len(splitted) == 2:
             pid, name = splitted
-            if name == 'AIBirdServer':
-                psutil.Process(int(pid)).terminate()
-    subprocess.run("jps")
+            if name == 'Launcher':
+                psutil.Process(int(pid)).kill()
+            elif name == 'AIBirdServer':
+                psutil.Process(int(pid)).kill()
 
 def main():
     """ Train AIBird agent using PPO
