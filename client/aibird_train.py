@@ -2,8 +2,8 @@
 import datetime
 import multiprocessing
 import os
-import sys
 import subprocess
+import sys
 from socket import timeout
 
 import psutil
@@ -87,10 +87,13 @@ def killserver():
     """ Kill AIBirdServer """
     output = subprocess.run("jps", stdout=subprocess.PIPE).stdout
     for line in ''.join(map(chr, output)).rstrip('\n').split('\n'):
-        if len(line) == 2:
-            pid, name = line.split()
-            if name == 'AIBirdServer':
-                psutil.Process(int(pid)).terminate()
+        splitted = line.split()
+        if len(splitted) == 2:
+            pid, name = splitted
+            if name == 'Launcher':
+                psutil.Process(int(pid)).kill()
+            elif name == 'AIBirdServer':
+                psutil.Process(int(pid)).kill()
 
 # def prepare_env(server_path, chrome_user, client_port):
 #     print('Preparing env', chrome_user, client_port)
@@ -127,8 +130,8 @@ def main(start_level=1):
                 ienv = aibird_env.AIBirdEnv(
                     action_space=60, act_cont=False,
                     process_state=process_screensot, process_action=quantize, start_level=start_level)
-                ienv.startup(server_path=server_path, chrome_user=i, client_port=2000+i)
                 envs.append(ienv)
+                ienv.startup(server_path=server_path, chrome_user=i, client_port=2000+i)
         except timeout as e:
             for env in envs:
                 env.terminate()

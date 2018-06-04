@@ -2,6 +2,7 @@ package ab;
 
 import java.net.*;
 import java.io.*;
+import java.util.concurrent.TimeUnit;
 import ab.AIBirdProtocol;
 
 public class AIBirdServer {
@@ -16,9 +17,22 @@ public class AIBirdServer {
                 } else if (args.length == 1) {
                         portNumber = Integer.parseInt(args[0]);
                 }
-                
+                ServerSocket serverSocket = null;
+                boolean binded = false;
+                while (!binded) {
+                        try {
+                                serverSocket = new ServerSocket(portNumber);
+                                binded = true;
+                        } catch(BindException e) {
+                                Runtime.getRuntime().exec(String.format("fuser -k %d/tcp", portNumber));
+                                try {
+                                        TimeUnit.SECONDS.sleep(1);
+                                } catch (InterruptedException e1) {
+                                        e1.printStackTrace();
+                                }
+                        }
+                }
                 System.err.println("Client server will be opened on port " + portNumber);
-                ServerSocket serverSocket = new ServerSocket(portNumber);
                 while (true) {
                         try (
                                 Socket clientSocket = serverSocket.accept();
