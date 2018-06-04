@@ -128,7 +128,7 @@ class AIBirdEnv(gym.Env):
         :returns: the screenshot of level 1
         """
         self.reset_count += 1
-        if self.reset_count > 400:
+        if self.reset_count > 50:
             # Regularly restarts the environment
             self.restart()
             self.reset_count = 0
@@ -138,9 +138,12 @@ class AIBirdEnv(gym.Env):
 
     def terminate(self):
         """ Terminate chrome and server. """
-        self.aibird_client.disconnect()
-        safe_terminate(self.chrome)
-        safe_terminate(self.server)
+        if self.aibird_client is not None:
+            self.aibird_client.disconnect()
+        if self.chrome is not None:
+            safe_terminate(self.chrome)
+        if self.server is not None:
+            safe_terminate(self.server)
 
     def restart(self):
         """ Restart chrome and server. """

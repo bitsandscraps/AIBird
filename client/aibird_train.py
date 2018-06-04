@@ -4,6 +4,8 @@ import multiprocessing
 import os
 import sys
 from socket import timeout
+import subprocess
+import psutil
 
 import tensorflow as tf
 
@@ -59,16 +61,17 @@ def quantize(act):
     tap = ttap * MAX_ACTION[1] + (1 - ttap) * MIN_ACTION[1]
     return angle, tap
 
-# def killserver():
-#     """ Kill AIBirdServer """
-#     print('killserver')
-#     output = subprocess.run("jps", stdout=subprocess.PIPE).stdout
-#     for line in ''.join(map(chr, output)).rstrip('\n').split('\n'):
-#         if len(line) == 2:
-#             pid, name = line.split()
-#             if name == 'AIBirdServer':
-#                 psutil.Process(int(pid)).terminate()
-#     subprocess.run("jps")
+def killserver():
+    """ Kill AIBirdServer """
+    output = subprocess.run("jps", stdout=subprocess.PIPE).stdout
+    print(output)
+    for line in ''.join(map(chr, output)).rstrip('\n').split('\n'):
+        splitted = line.split()
+        if len(splitted) == 2:
+            pid, name = splitted
+            if name == 'AIBirdServer':
+                psutil.Process(int(pid)).terminate()
+    subprocess.run("jps")
 
 def main():
     """ Train AIBird agent using PPO
@@ -94,9 +97,11 @@ def main():
             print(datetime.datetime.now().isoformat(), "Chrome crashed. Restarting....", flush=True)
             tf.reset_default_graph()
             env.restart()
-        except Exception as exception:
+            killserver()
+        except:
             env.terminate()
-            raise exception
+            killserver()
+            raise
 
 if __name__ == "__main__":
     main()
