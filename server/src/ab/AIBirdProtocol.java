@@ -33,7 +33,10 @@ public class AIBirdProtocol {
         private int score = 0;
 
         private ActionRobot aRobot;
-        // private int curLevel = 1;
+        private int curLevel = 1;
+        private int actions = 0;
+        private GameState currentState = null;
+        private final int[] numberOfBirds = {3, 5, 4, 4, 4, 4, 4, 4, 4, 5, 4, 4, 4, 4, 4, 5, 3, 5, 4, 5, 8};
 
         AIBirdProtocol() {
                 aRobot = new ActionRobot();
@@ -91,8 +94,6 @@ public class AIBirdProtocol {
                                 return polarShoot(true, theInput[0], theInput[1], theInput[2]);
                         case POLARSHOOTFAST:
                                 return polarShoot(false, theInput[0], theInput[1], theInput[2]);
-                        case ISLEVELOVER:
-                                return isLevelOver();
                         default:
                                 assert false: "Unknown MID: " + mid + ")";
                                 return new byte[1];             // Never Used
@@ -119,17 +120,15 @@ public class AIBirdProtocol {
         }
 
         private byte[] state() throws IOException {
-                GameState state = aRobot.getState();
-                return writeInt(state.getCode());
+                if (currentState == null) {
+                        return writeInt(-1);
+                }
+                return writeInt(currentState.getCode());
         }
 
         private byte[] myScore() throws IOException {
                 return writeInt(score);
         }
-
-        /* private byte[] currentLevel() throws IOException {
-                return writeInt(curLevel);
-        } */
 
         private byte[] fullZoomOut() throws IOException {
                ActionRobot.fullyZoomOut(); 
@@ -143,19 +142,31 @@ public class AIBirdProtocol {
 
         private byte[] restartLevel() throws IOException {
                 aRobot.restartLevel();
+                waitUntilState(GameState.PLAYING);
                 score = 0;
+                actions = 0;
                 return writeInt(1);
+        }
+
+        private void waitUntilState(GameState desired) {
+                currentState = aRobot.getState();
+                while (currentState != desired) {
+                        try {
+                                TimeUnit.MILLISECONDS.sleep(300);
+                        } catch(InterruptedException e){
+                                e.printStackTrace();
+                        }
+                        currentState = aRobot.getState();
+                }
         }
 
         private byte[] loadLevel(int level) throws IOException {
                 aRobot.loadLevel(level);
-                try {
-                        TimeUnit.MILLISECONDS.sleep(10);
-                } catch(InterruptedException e){
-                        e.printStackTrace();
-                }
+                waitUntilState(GameState.PLAYING);
                 aRobot.click();
                 score = 0;
+                curLevel = level;
+                actions = 0;
                 return writeInt(1);
         }
 
@@ -204,25 +215,6 @@ public class AIBirdProtocol {
                 }
         }
 
-        private byte[] isLevelOver() throws IOException {
-                GameState state = aRobot.getState();
-                if (state == GameState.PLAYING) {
-                        Vision vision = getVision();
-                        /* get Birds
-                        List<ABObject> birds = vision.findBirdsMBR();
-                        if (birds.isEmpty()) {   // No birds level is over.
-                                return writeInt(1);
-                        } */
-                        // get Pigs
-                        List<ABObject> pigs = vision.findPigsMBR();
-                        if (pigs.isEmpty()) {   // No pigs level is over.
-                                return writeInt(1);
-                        }
-                        return writeInt(0);
-                }
-                return writeInt(1);
-        }
-
         private Vision getVision() {
                 // capture Image
                 BufferedImage screenshot = ActionRobot.doScreenShot();
@@ -240,12 +232,35 @@ public class AIBirdProtocol {
                 TimeUnit.SECONDS.sleep(2);
                 int old_score = score;
                 int same_score_count = 0;
+                currentState = aRobot.getState();
+                if (++actions >= numberOfBirds[curLevel - 1]) {
+                        // No birds level is over
+                        score = StateUtil.getScore(ActionRobot.proxy);
+                        if (score == -1) {
+                                score = old_score;
+                                currentState = GameState.LOST;
+                                return;
+                        }
+                        while (currentState == GameState.PLAYING) {
+                                // wait until level ends
+                                TimeUnit.MILLISECONDS.sleep(300);
+                                currentState = aRobot.getState();
+                                old_score = score;
+                                score = StateUtil.getScore(ActionRobot.proxy);
+                                if (score == -1) {
+                                        score = old_score;
+                                        currentState = GameState.LOST;
+                                }
+                        }
+                        return;
+                }
                 // Check whether score is stable
-                while (same_score_count < 3) {
+                while (same_score_count < 4) {
                         TimeUnit.MILLISECONDS.sleep(300);
                         score = StateUtil.getScore(ActionRobot.proxy);
                         if (score == -1) {      // Lost
                                 score = old_score;
+                                currentState = GameState.LOST;
                                 return;
                         } else if (score == old_score) {
                                 ++same_score_count;
@@ -256,11 +271,7 @@ public class AIBirdProtocol {
                 }
                 // get Pigs
                 if (getVision().findPigsMBR().isEmpty()) {   // No pigs level is over.
-                        GameState state = aRobot.getState();
-                        while (state != GameState.WON) {
-                                TimeUnit.MILLISECONDS.sleep(300);
-                                state = aRobot.getState();
-                        }
+                        waitUntilState(GameState.WON);
                         score = StateUtil.getScore(ActionRobot.proxy);
                 }
         }

@@ -1,38 +1,12 @@
 """ An OpenAI environment interface for AIBird client """
 from time import sleep
 
-import gym
 import numpy as np
 import psutil
 from scipy.stats import logistic
 
+import gym
 import aibird_client
-
-BIRD_ORDER = [  # Level
-    'rrr',      # 1
-    'rrrrr',    # 2
-    'rrrr',     # 3
-    'rrrr',     # 4
-    'rrrr',     # 5
-    'rrrr',     # 6
-    'rrrr',     # 7
-    'rrrr',     # 8
-    'rrrr',     # 9
-    'bbbbb',    # 10
-    'rbbb',     # 11
-    'bbbr',     # 12
-    'bbrr',     # 13
-    'rrrr',     # 14
-    'bbbb',     # 15
-    'yyyyy',    # 16
-    'yyy',      # 17
-    'yyyyy',    # 18
-    'byyr',     # 19
-    'yyyyy',    # 20
-    'brybryyy'  # 21
-    ]
-
-MAXACTIONS = [3, 5, 4, 4, 4, 4, 4, 4, 4, 5, 4, 4, 4, 4, 4, 5, 3, 5, 4, 5, 8]
 
 class AIBirdEnv(gym.Env):
     """OpenAI Environment for AIBird
@@ -93,30 +67,21 @@ class AIBirdEnv(gym.Env):
 
     def step(self, action):
         """Executes `action` and returns the reward. """
-        level = self.aibird_client.current_level
         score = self.aibird_client.current_score
-        is_last_shot = self.action_count == (MAXACTIONS[level - 1] - 1)
         processed_action = self._process_action(action)
         reward = self.aibird_client.polar_shoot(*processed_action)
-        self.action_count += 1
-        level_over = self.aibird_client.is_level_over
         observation = self._get_state()
-        if not (is_last_shot or level_over):
-            # Both birds and pigs are left
-            return observation, reward, False, dict()
         state = self.aibird_client.state
-        while level_over and not state.isover():
-            sleep(0.1)
-            state = self.aibird_client.state
-        if state.won():
-            reward = self.aibird_client.current_score - score
-            if self.aibird_client.next_level():
-                # Proceed to next level
-                self.action_count = 0
-                observation = self._get_state()
-                return observation, reward, False, dict()
-        # Either lost or won all levels
-        return observation, reward, True, dict()
+        if state.isover():
+            if state.won():
+                if self.aibird_client.next_level():
+                    # Proceed to next level
+                    observation = self._get_state()
+                    return observation, reward, False, dict()
+            # Either lost or won all levels
+            return observation, reward, True, dict()
+        # Both birds and pigs are left
+        return observation, reward, False, dict()
 
     def render(self, mode='human'):
         """ Since the actual AI Bird game is running, render is unnecessary.

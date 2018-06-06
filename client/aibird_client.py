@@ -120,13 +120,6 @@ class AIBirdClient:
         self.socket.sendall(aibird_message.get_state())
         return aibird_message.recv_state(self.socket.recv(aibird_message.LEN_GET_STATE))
 
-    @property
-    def is_level_over(self):
-        """Send is level over query.
-        Return True if level is over. False otherwise
-        """
-        return self._send_and_recv_result(aibird_message.get_is_level_over())
-
     def _get_score(self):
         """Request the server for my score"""
         self.socket.sendall(aibird_message.get_my_score())
