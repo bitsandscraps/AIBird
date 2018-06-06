@@ -179,7 +179,13 @@ def safe_terminate(proc):
     procs = proc.children(recursive=True)
     procs.append(proc)
     for p in procs:
-        p.terminate()
+        try:
+            p.terminate()
+        except psutil.NoSuchProcess:
+            pass
     _, alive = psutil.wait_procs(procs, timeout=3)
     for p in alive:
-        p.kill()
+        try:
+            p.kill()
+        except psutil.NoSuchProcess:
+            pass

@@ -38,7 +38,7 @@ def train(penv, num_timesteps, seed, load_path=None):
     set_global_seeds(seed)
     with tf.Session(config=config) as _:
         env = DummyVecEnv([make_env])
-        ppo2.learn(policy=CnnPolicy, env=env, nsteps=128, nminibatches=4,
+        ppo2.learn(policy=CnnPolicy, env=env, nsteps=1024, nminibatches=32,
                    lam=0.95, gamma=1, noptepochs=10, log_interval=1,
                    ent_coef=.01,
                    lr=lambda f: f * 2.5e-4,
@@ -69,15 +69,19 @@ def killserver():
         splitted = line.split()
         if len(splitted) == 2:
             pid, name = splitted
-            if name == 'Launcher':
-                psutil.Process(int(pid)).kill()
-            elif name == 'AIBirdServer':
-                psutil.Process(int(pid)).kill()
+            try:
+                if name == 'Launcher':
+                        psutil.Process(int(pid)).kill()
+                elif name == 'AIBirdServer':
+                    psutil.Process(int(pid)).kill()
+            except psutil.NoSuchProcess:
+                pass
+    subprocess.run("killall google-chrome")
 
 def main():
     """ Train AIBird agent using PPO
     """
-    logger.configure('aibird_log_1to6')
+    logger.configure('aibird_log_1to6_')
     curr_dir_path = os.path.dirname(os.path.realpath(__file__))
     server_path = os.path.abspath(os.path.join(curr_dir_path, os.pardir, 'server'))
     # find the newest checkpoint

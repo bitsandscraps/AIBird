@@ -13,6 +13,7 @@ client/aibird_log
 client/aibird_log_discrete
 client/aibird_log_multi
 client/aibird_log_1to6
+client/aibird_log_1to6_
 
 # C extensions
 *.so
