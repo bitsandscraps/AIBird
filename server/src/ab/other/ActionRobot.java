@@ -292,4 +292,14 @@ public class ActionRobot {
                         e1.printStackTrace();
                 }
         }
+
+        public void resumeEagle() {
+                //Click the x button, close eagle.
+                ActionRobot.proxy.send(new ProxyClickMessage(255, 350));
+                try {
+                        Thread.sleep(1000);
+                } catch (InterruptedException e1) {
+                        e1.printStackTrace();
+                }
+        }
 }

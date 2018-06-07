@@ -14,6 +14,7 @@ import ab.utils.StateUtil;
 import ab.vision.ABObject;
 import ab.vision.GameStateExtractor.GameState;
 import ab.vision.Vision;
+import ab.vision.VisionUtils;
 
 public class AIBirdProtocol {
         private final byte DOSCREENSHOT = 11;
@@ -37,10 +38,18 @@ public class AIBirdProtocol {
         private int actions = 0;
         private GameState currentState = null;
         private final int[] numberOfBirds = {3, 5, 4, 4, 4, 4, 4, 4, 4, 5, 4, 4, 4, 4, 4, 5, 3, 5, 4, 5, 8};
+        private final String eagleHash;
 
         AIBirdProtocol() {
                 aRobot = new ActionRobot();
                 ActionRobot.GoFromMainMenuToLevelSelection();
+                BufferedImage eagle = null;
+                try {
+                        eagle = ImageIO.read(getClass().getResource("eagle.png"));
+                } catch(IOException e){
+                        e.printStackTrace();
+                }
+                eagleHash = VisionUtils.imageDigest(eagle);
         }
 
         public int numberOfIntsToReadMore(byte mid) {
@@ -108,7 +117,19 @@ public class AIBirdProtocol {
         }
 
         private byte[] doScreenShot() throws IOException {
-                BufferedImage screenshot = ActionRobot.doScreenShot();
+                BufferedImage screenshot = null;
+                boolean checkedNotEagle = false;
+                while (!checkedNotEagle) {
+                        screenshot = ActionRobot.doScreenShot();
+                        BufferedImage subimage = screenshot.getSubimage(236, 333, 30, 30);
+                        String subimgHash = VisionUtils.imageDigest(subimage);
+                        if (subimgHash.equals(eagleHash)) {
+                                aRobot.resumeEagle();
+                                ActionRobot.fullyZoomOut();
+                        } else {
+                                checkedNotEagle = true;
+                        }
+                }
                 ByteArrayOutputStream bos = new ByteArrayOutputStream();
                 DataOutputStream dos = new DataOutputStream(bos);
                 ByteArrayOutputStream ibos = new ByteArrayOutputStream();

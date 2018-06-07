@@ -19,8 +19,8 @@ from baselines.ppo2.policies import CnnPolicy
 
 import aibird_env
 
-MAX_ACTION = [80, 2.5]
-MIN_ACTION = [-10, 0.1]
+MAX_ACTION = [70, 2.5]
+MIN_ACTION = [-5, 0.1]
 
 def train(penv, num_timesteps, seed, load_path=None):
     """ Slight modification of train method in baselines.ppo2.run_mujoco """
@@ -76,12 +76,12 @@ def killserver():
                     psutil.Process(int(pid)).kill()
             except psutil.NoSuchProcess:
                 pass
-    subprocess.run("killall google-chrome")
+    subprocess.run(['killall', 'google-chrome-stable'])
 
 def main():
     """ Train AIBird agent using PPO
     """
-    logger.configure('aibird_log_1to6_')
+    logger.configure('aibird_log_14')
     curr_dir_path = os.path.dirname(os.path.realpath(__file__))
     server_path = os.path.abspath(os.path.join(curr_dir_path, os.pardir, 'server'))
     # find the newest checkpoint
@@ -94,7 +94,7 @@ def main():
         try:
             env = aibird_env.AIBirdEnv(
                 action_space=60, act_cont=False,
-                process_state=process_screensot, process_action=quantize)
+                process_state=process_screensot, process_action=quantize, start_level=14)
             env.startup(server_path, 1, 2000)
             train(env, int(1e6), 0, load_path)
         except timeout:
