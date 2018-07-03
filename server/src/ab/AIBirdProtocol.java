@@ -170,14 +170,14 @@ public class AIBirdProtocol {
         }
 
         private void waitUntilState(GameState desired) {
-                currentState = aRobot.getState();
-                while (currentState != desired) {
+                for (int i = 0; i < 50; i++) {
                         try {
                                 TimeUnit.MILLISECONDS.sleep(300);
                         } catch(InterruptedException e){
                                 e.printStackTrace();
                         }
                         currentState = aRobot.getState();
+                        if (currentState == desired) return;
                 }
         }
 
@@ -292,6 +292,7 @@ public class AIBirdProtocol {
                 }
                 // get Pigs
                 if (getVision().findPigsMBR().isEmpty()) {   // No pigs level is over.
+                        System.out.println("No pigs level over");
                         waitUntilState(GameState.WON);
                         score = StateUtil.getScore(ActionRobot.proxy);
                 }

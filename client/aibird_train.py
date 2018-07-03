@@ -64,7 +64,6 @@ def quantize(act):
 def killserver():
     """ Kill AIBirdServer """
     output = subprocess.run("jps", stdout=subprocess.PIPE).stdout
-    print(output)
     for line in ''.join(map(chr, output)).rstrip('\n').split('\n'):
         splitted = line.split()
         if len(splitted) == 2:
@@ -76,7 +75,7 @@ def killserver():
                     psutil.Process(int(pid)).kill()
             except psutil.NoSuchProcess:
                 pass
-    subprocess.run(['killall', 'google-chrome-stable'])
+    subprocess.run(['killall', 'chrome'])
 
 def main():
     """ Train AIBird agent using PPO
